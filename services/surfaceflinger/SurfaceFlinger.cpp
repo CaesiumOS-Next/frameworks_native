@@ -4293,7 +4293,7 @@ void SurfaceFlinger::updateInputFlinger(VsyncId vsyncId, TimePoint frameTime) {
     std::vector<WindowInfo> windowInfos;
     std::vector<DisplayInfo> displayInfos;
     bool updateWindowInfo = false;
-    if (mUpdateInputInfo) {
+    if (mUpdateInputInfo||!mInputWindowCommands.getFocusRequests().empty()) {
         mUpdateInputInfo = false;
         updateWindowInfo = true;
         buildWindowInfos(windowInfos, displayInfos);
