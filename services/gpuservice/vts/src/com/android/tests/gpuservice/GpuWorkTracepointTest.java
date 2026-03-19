@@ -27,6 +27,7 @@ import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 import com.android.tradefed.util.CommandResult;
 import com.android.tradefed.util.CommandStatus;
 
+import com.android.compatibility.common.util.FeatureUtil;
 import com.android.compatibility.common.util.PropertyUtil;
 import com.android.compatibility.common.util.VsrTest;
 
@@ -47,11 +48,17 @@ public class GpuWorkTracepointTest extends BaseHostJUnit4Test {
     @RequiresDevice
     @Test
     public void testGpuWorkPeriodTracepointFormat() throws Exception {
+<<<<<<< HEAD   (ae266dcb706d083868578cfedce381ef44488a07 Merge cherrypicks of ['googleplex-android-review.googlesourc)
 
         // Exempt LAPTOP form factor from this requirement by skipping this test
         assumeFalse("Skipping test for LAPTOP devices",
                 getDevice().hasFeature("android.hardware.type.pc"));
 
+||||||| BASE   (f99d5db98adb5a2415becacd11a7e33d8b2608f7 Merge changes from topic "am-2a9e22b098b842debff91693c0fe321)
+=======
+        assumeTrue("Test does not apply for automotive devices",
+                !FeatureUtil.isAutomotive(getDevice()));
+>>>>>>> CHANGE (2c999db6af862b1c7426ec715e2d85dbd4a9a67a Skip testGpuWorkPeriodTracepointFormat for automotive)
         CommandResult commandResult = getDevice().executeShellV2Command(
                 String.format("cat %s", GPU_WORK_PERIOD_TRACEPOINT_FORMAT_PATH));
 
