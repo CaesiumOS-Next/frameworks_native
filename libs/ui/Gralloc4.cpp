@@ -152,6 +152,25 @@ static inline status_t sBufferDescriptorInfo(std::string name, uint32_t width, u
     return validateBufferDescriptorInfo(outDescriptorInfo);
 }
 
+constexpr status_t hidlErrorToStatusT(Error error) {
+    switch (error) {
+        case Error::NONE:
+            return OK;
+        case Error::BAD_DESCRIPTOR:
+            return BAD_VALUE;
+        case Error::BAD_BUFFER:
+            return BAD_TYPE;
+        case Error::BAD_VALUE:
+            return BAD_VALUE;
+        case Error::NO_RESOURCES:
+            return NO_MEMORY;
+        case Error::UNSUPPORTED:
+            return INVALID_OPERATION;
+        default:
+            return UNKNOWN_ERROR;
+    }
+}
+
 } // anonymous namespace
 
 void Gralloc4Mapper::preload() {
@@ -1110,7 +1129,7 @@ status_t Gralloc4Allocator::allocate(std::string requestorName, uint32_t width, 
     auto ret = mAllocator->allocate(descriptor, bufferCount,
                                     [&](const auto& tmpError, const auto& tmpStride,
                                         const auto& tmpBuffers) {
-                                        error = static_cast<status_t>(tmpError);
+                                        error = hidlErrorToStatusT(tmpError);
                                         if (tmpError != Error::NONE) {
                                             return;
                                         }
