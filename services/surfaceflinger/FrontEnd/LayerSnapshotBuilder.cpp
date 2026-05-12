@@ -801,6 +801,17 @@ void LayerSnapshotBuilder::updateSnapshot(LayerSnapshot& snapshot, const Args& a
                 (requested.flags & layer_state_t::eLayerSkipScreenshot);
     }
 
+   // Inherit geomBufferUsesDisplayInverseTransform from parent to child.
+   // BLASTBufferQueue child layers need this so GPU composition on virtual displays
+   // (screen recording) correctly applies inverse display rotation to the texture.
+   if (forceUpdate ||
+       snapshot.clientChanges & layer_state_t::eTransformToDisplayInverseChanged) {
+       if (!requested.transformToDisplayInverse &&
+           parentSnapshot.geomBufferUsesDisplayInverseTransform) {
+           snapshot.geomBufferUsesDisplayInverseTransform = true;
+       }
+   }
+
     if (forceUpdate || snapshot.clientChanges & layer_state_t::eStretchChanged) {
         snapshot.stretchEffect = (requested.stretchEffect.hasEffect())
                 ? requested.stretchEffect
