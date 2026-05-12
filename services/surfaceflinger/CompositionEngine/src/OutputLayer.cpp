@@ -363,6 +363,18 @@ void OutputLayer::updateCompositionState(
             (state.bufferTransform & ui::Transform::ROT_INVALID)) {
             state.forceClientComposition = true;
         }
+
+        // Force GPU composition for cursor layers with displayInverseTransform on
+        // non-internal displays (screen recording). HWC cursor plane ignores
+        // bufferTransform, so only GPU composition can apply the inverse rotation.
+        {
+            using aidl::android::hardware::graphics::composer3::Composition;
+            if (layerFEState->compositionType == Composition::CURSOR &&
+                layerFEState->geomBufferUsesDisplayInverseTransform &&
+                !getOutput().isInternalDisplay()) {
+                state.forceClientComposition = true;
+            }
+        }
     }
 
     auto pixelFormat = layerFEState->buffer ? std::make_optional(static_cast<ui::PixelFormat>(
