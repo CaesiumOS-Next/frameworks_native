@@ -5815,9 +5815,15 @@ bool InputDispatcher::transferTouchGesture(const sp<IBinder>& fromToken, const s
                   toWindowHandle->getName().c_str());
         }
 
-        // Erase old window.
         ftl::Flags<InputTarget::Flags> oldTargetFlags = touchedWindow->targetFlags;
         std::vector<PointerProperties> pointers = touchedWindow->getTouchingPointers(deviceId);
+        if (isDragDrop && pointers.size() != 1) {
+            ALOGW("The drag and drop cannot be started when there is no pointer or more than 1"
+                  " pointer on the window.");
+            return false;
+        }
+
+        // Erase old window.
         state->removeWindowByToken(fromToken);
 
         // Add new window.
@@ -5834,11 +5840,6 @@ bool InputDispatcher::transferTouchGesture(const sp<IBinder>& fromToken, const s
 
         // Store the dragging window.
         if (isDragDrop) {
-            if (pointers.size() != 1) {
-                ALOGW("The drag and drop cannot be started when there is no pointer or more than 1"
-                      " pointer on the window.");
-                return false;
-            }
             // Track the pointer id for drag window and generate the drag state.
             const size_t id = pointers.begin()->id;
             mDragState = std::make_unique<DragState>(toWindowHandle, deviceId, id);
