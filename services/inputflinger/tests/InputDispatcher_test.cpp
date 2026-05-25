@@ -12742,6 +12742,34 @@ TEST_F(InputDispatcherDragTests, NoDragAndDropWhenMultiFingers) {
 
     // Should not perform drag and drop when window has multi fingers.
     ASSERT_FALSE(startDrag(false));
+
+    const MotionEvent firstFingerUpEvent =
+            MotionEventBuilder(POINTER_0_UP, AINPUT_SOURCE_TOUCHSCREEN)
+                    .displayId(ui::LogicalDisplayId::DEFAULT)
+                    .eventTime(systemTime(SYSTEM_TIME_MONOTONIC))
+                    .pointer(PointerBuilder(/*id=*/0, ToolType::FINGER).x(50).y(50))
+                    .pointer(PointerBuilder(/*id=*/1, ToolType::FINGER).x(75).y(50))
+                    .build();
+    ASSERT_EQ(InputEventInjectionResult::SUCCEEDED,
+              injectMotionEvent(*mDispatcher, firstFingerUpEvent, INJECT_EVENT_TIMEOUT,
+                                InputEventInjectionSync::WAIT_FOR_RESULT))
+            << "Inject motion event should return InputEventInjectionResult::SUCCEEDED";
+    mWindow->consumeMotionPointerUp(/*pointerIdx=*/0,
+                                    WithDisplayId(ui::LogicalDisplayId::DEFAULT));
+
+    ASSERT_EQ(InputEventInjectionResult::SUCCEEDED,
+              injectMotionEvent(*mDispatcher,
+                                MotionEventBuilder(AMOTION_EVENT_ACTION_UP,
+                                                   AINPUT_SOURCE_TOUCHSCREEN)
+                                        .displayId(ui::LogicalDisplayId::DEFAULT)
+                                        .eventTime(systemTime(SYSTEM_TIME_MONOTONIC))
+                                        .pointer(PointerBuilder(/*id=*/1, ToolType::FINGER)
+                                                         .x(75)
+                                                         .y(50))
+                                        .build(),
+                                INJECT_EVENT_TIMEOUT, InputEventInjectionSync::WAIT_FOR_RESULT))
+            << "Inject motion event should return InputEventInjectionResult::SUCCEEDED";
+    mWindow->consumeMotionUp(ui::LogicalDisplayId::DEFAULT);
 }
 
 TEST_F(InputDispatcherDragTests, DragAndDropWhenSplitTouch) {
