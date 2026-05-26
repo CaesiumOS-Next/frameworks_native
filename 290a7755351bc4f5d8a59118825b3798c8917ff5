@@ -1,0 +1,125 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "1571ac7a_6c28f917",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1149384
+      },
+      "writtenOn": "2026-05-26T23:58:25Z",
+      "side": 1,
+      "message": "what is this?\n\ndo you have a proper issuetracker number?",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 12
+      },
+      "revId": "290a7755351bc4f5d8a59118825b3798c8917ff5",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "15dee9c5_34f24532",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1149384
+      },
+      "writtenOn": "2026-05-26T23:58:25Z",
+      "side": 1,
+      "message": "Could you please clarify - from the app perspective:\n\n1) What is the current sequence of events received,\n2) What is the desired sequence of events\n3) Why is that important",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 71
+      },
+      "revId": "290a7755351bc4f5d8a59118825b3798c8917ff5",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c7e73aab_dd3ca6c0",
+        "filename": "services/inputflinger/dispatcher/InputDispatcher.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1149384
+      },
+      "writtenOn": "2026-05-26T23:58:25Z",
+      "side": 1,
+      "message": "unfortunately this code has now changed internally - this patch won\u0027t apply as is. It would need to be reworked",
+      "revId": "290a7755351bc4f5d8a59118825b3798c8917ff5",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "1631fdae_2191a4a7",
+        "filename": "services/inputflinger/dispatcher/InputDispatcher.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 5822,
+      "author": {
+        "id": 1149384
+      },
+      "writtenOn": "2026-05-26T23:58:25Z",
+      "side": 1,
+      "message": "Please use cpp-style logs and also include the actual pointer count that was observed",
+      "range": {
+        "startLine": 5821,
+        "startChar": 12,
+        "endLine": 5822,
+        "endChar": 45
+      },
+      "fixSuggestions": [
+        {
+          "fixId": "7e6a4896_3c43ad16",
+          "description": "prompt_to_edit API",
+          "replacements": [
+            {
+              "path": "services/inputflinger/dispatcher/InputDispatcher.cpp",
+              "range": {
+                "startLine": 5821,
+                "startChar": 0,
+                "endLine": 5823,
+                "endChar": 0
+              },
+              "replacement": "            LOG(WARNING) \u003c\u003c \"The drag and drop cannot be started when there is no pointer or more \"\n                            \"than 1 pointer on the window. Actual pointer count: \"\n                         \u003c\u003c pointers.size();\n"
+            }
+          ]
+        }
+      ],
+      "revId": "290a7755351bc4f5d8a59118825b3798c8917ff5",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "35f01736_16c569ba",
+        "filename": "services/inputflinger/tests/InputDispatcher_test.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 12773,
+      "author": {
+        "id": 1149384
+      },
+      "writtenOn": "2026-05-26T23:58:25Z",
+      "side": 1,
+      "message": "Is this test actually reproducing the issue?\n\nI applied the test (by itself) locally. Had to slightly modify it, like this:\n\n\n```\n TEST_F(InputDispatcherDragTests, NoDragAndDropWhenMultiFingers) {\n+    // Ensure window could track pointerIds if it didn\u0027t support split touch.\n+//     mWindow-\u003esetPreventSplitting(true);\n+\n     ASSERT_EQ(InputEventInjectionResult::SUCCEEDED,\n               injectMotionDown(*mDispatcher, AINPUT_SOURCE_TOUCHSCREEN,\n                                ui::LogicalDisplayId::DEFAULT, {50, 50}))\n@@ -13669,6 +13672,35 @@ TEST_F(InputDispatcherDragTests, NoDragAndDropWhenMultiFingers) {\n \n     // Should not perform drag and drop when window has multi fingers.\n     ASSERT_FALSE(startDrag(false));\n+\n+    const MotionEvent firstFingerUpEvent \u003d\n+            MotionEventBuilder(POINTER_0_UP, AINPUT_SOURCE_TOUCHSCREEN)\n+                    .displayId(ui::LogicalDisplayId::DEFAULT)\n+                    .eventTime(systemTime(SYSTEM_TIME_MONOTONIC))\n+                    .pointer(PointerBuilder(/*id\u003d*/0, ToolType::FINGER).x(50).y(50))\n+                    .pointer(PointerBuilder(/*id\u003d*/1, ToolType::FINGER).x(75).y(50))\n+                    .build();\n+    ASSERT_EQ(InputEventInjectionResult::SUCCEEDED,\n+              injectMotionEvent(*mDispatcher, firstFingerUpEvent, INJECT_EVENT_TIMEOUT,\n+                                InputEventInjectionSync::WAIT_FOR_RESULT))\n+            \u003c\u003c \"Inject motion event should return InputEventInjectionResult::SUCCEEDED\";\n+    mWindow-\u003econsumeMotionEvent(WithMotionAction(ACTION_CANCEL));\n+//             mWindow-\u003econsumeMotionPointerUp(/*pointerIdx\u003d*/0,\n+//                                     WithDisplayId(ui::LogicalDisplayId::DEFAULT));\n+\n+//     ASSERT_EQ(InputEventInjectionResult::SUCCEEDED,\n+//               injectMotionEvent(*mDispatcher,\n+//                                 MotionEventBuilder(AMOTION_EVENT_ACTION_UP,\n+//                                                    AINPUT_SOURCE_TOUCHSCREEN)\n+//                                         .displayId(ui::LogicalDisplayId::DEFAULT)\n+//                                         .eventTime(systemTime(SYSTEM_TIME_MONOTONIC))\n+//                                         .pointer(PointerBuilder(/*id\u003d*/1, ToolType::FINGER)\n+//                                                          .x(75)\n+//                                                          .y(50))\n+//                                         .build(),\n+//                                 INJECT_EVENT_TIMEOUT, InputEventInjectionSync::WAIT_FOR_RESULT))\n+//             \u003c\u003c \"Inject motion event should return InputEventInjectionResult::SUCCEEDED\";\n+//     mWindow-\u003econsumeMotionUp(ui::LogicalDisplayId::DEFAULT);\n }\n \n TEST_F(InputDispatcherDragTests, DragAndDropWhenSplitTouch) {\n\n```\n\nThe test passes.\n\nAre there other scenarios to could expose the problem you are trying to fix?\n\n\nOr maybe you are saying that currently, it\u0027s receiving ACTION_CANCEL, but you want it to receive the remainder of the gesture correctly instead?",
+      "revId": "290a7755351bc4f5d8a59118825b3798c8917ff5",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    }
+  ]
+}
