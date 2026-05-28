@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "59f77fd4_1fe8d2eb",
+        "filename": "services/surfaceflinger/Scheduler/EventThread.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1953840
+      },
+      "writtenOn": "2026-05-28T19:09:29Z",
+      "side": 1,
+      "message": "This feels a bit risky of a change considering it is a sizeable increase and would apply for all event thread connections, and apps can have multiple display event connections. There is also an existing memory code purple, so I\u0027d have concern about the memory pressure that this change would cause",
+      "revId": "86b53cc97cfe58ed618dd21753461f9e9bd4c3e5",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    }
+  ]
+}
