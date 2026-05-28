@@ -52,6 +52,24 @@
       "parentUuid": "62be4d83_b0e693ce",
       "revId": "86b53cc97cfe58ed618dd21753461f9e9bd4c3e5",
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "fe9a7d1d_b16396e8",
+        "filename": "services/surfaceflinger/Scheduler/EventThread.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1587936
+      },
+      "writtenOn": "2026-05-28T19:38:48Z",
+      "side": 1,
+      "message": "one possibility I can think of is to implement a heap allocation when the socket buffer is full, but I\u0027d argue this would be an intrusive/risky change that I wouldn\u0027t do without some substantive more testing.",
+      "parentUuid": "27b17598_4b25a449",
+      "revId": "86b53cc97cfe58ed618dd21753461f9e9bd4c3e5",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     }
   ]
 }
