@@ -210,7 +210,7 @@ EventThreadConnection::EventThreadConnection(EventThread* eventThread, uid_t cal
       : mOwnerUid(callingUid),
         mEventRegistration(eventRegistration),
         mEventThread(eventThread),
-        mChannel(gui::BitTube::DefaultSize) {}
+        mChannel(256 * 1024) {}
 
 EventThreadConnection::~EventThreadConnection() {
     // do nothing here -- clean-up will happen automatically

@@ -937,6 +937,63 @@ TEST_F(EventThreadTest, connectionsWithSameUidReceiveBufferStuffing) {
     expectQueuedBufferCountReceivedByConnection(secondConnectionEventRecorder, 3);
 }
 
+TEST_F(EventThreadTest, connectionChannelHasCustomLargeBufferSize) {
+    setupEventThread();
+
+    // Create a real connection to inspect its actual channel (BitTube)
+    sp<EventThreadConnection> realConnection =
+            sp<EventThreadConnection>::make(mThread.get(), mConnectionUid, getpid(),
+                                            EventRegistrationFlags{});
+
+    gui::BitTube tube;
+    realConnection->stealReceiveChannel(&tube);
+
+    int sendFd = tube.getSendFd();
+    ASSERT_GE(sendFd, 0);
+
+    int sndBufSize = 0;
+    socklen_t len = sizeof(sndBufSize);
+    int err = getsockopt(sendFd, SOL_SOCKET, SO_SNDBUF, &sndBufSize, &len);
+    ASSERT_EQ(0, err) << "Failed to getsockopt SO_SNDBUF: " << strerror(errno);
+
+    // The kernel typically doubles the value set by setsockopt(SO_SNDBUF) to allow for
+    // internal sk_buff overhead. Since we configure 256KB (262144), we expect at least
+    // 256KB, and typically up to 512KB on standard Linux kernels.
+    EXPECT_GE(sndBufSize, 256 * 1024) << "Socket send buffer size is too small";
+}
+
+TEST_F(EventThreadTest, congestedConnectionDoesNotBlockOtherConnections) {
+    setupEventThread();
+
+    // Create a real connection that will become congested
+    sp<EventThreadConnection> realConnection =
+            sp<EventThreadConnection>::make(mThread.get(), mConnectionUid, getpid(),
+                                            EventRegistrationFlags{});
+    mThread->registerDisplayEventConnection(realConnection);
+    mThread->setVsyncRate(1, realConnection);
+
+    // Create a mock connection to verify it continues receiving events
+    ConnectionEventRecorder mockEventRecorder{0};
+    sp<MockEventThreadConnection> mockConnection = createConnection(mockEventRecorder);
+    mThread->setVsyncRate(1, mockConnection);
+
+    expectVSyncCallbackScheduleReceived(true);
+
+    // Flood the EventThread with VSync events.
+    // Since realConnection is not being read from, its 256KB buffer will eventually
+    // fill up. Once full, postEvent will fail with -EAGAIN, but mockConnection
+    // must continue receiving all events.
+    for (unsigned i = 1; i <= 5000; i++) {
+        onVSyncEvent(i * 1000, i * 1000 + 500, 0);
+
+        // Verify mockConnection receives every event
+        expectVsyncEventReceivedByConnection("mockConnection", mockEventRecorder, i * 1000, i);
+    }
+
+    // EventThread remains alive and schedule continues to be received
+    expectVSyncCallbackScheduleReceived(true);
+}
+
 } // namespace
 } // namespace android
 
