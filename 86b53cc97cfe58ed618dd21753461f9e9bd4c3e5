@@ -34,6 +34,24 @@
       "parentUuid": "59f77fd4_1fe8d2eb",
       "revId": "86b53cc97cfe58ed618dd21753461f9e9bd4c3e5",
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "27b17598_4b25a449",
+        "filename": "services/surfaceflinger/Scheduler/EventThread.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1953840
+      },
+      "writtenOn": "2026-05-28T19:35:27Z",
+      "side": 1,
+      "message": "I\u0027m not as familiar with the scope of display event connections, so looping in @adyabr@google.com to perhaps provide some insight or guidance in this space!",
+      "parentUuid": "62be4d83_b0e693ce",
+      "revId": "86b53cc97cfe58ed618dd21753461f9e9bd4c3e5",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     }
   ]
 }
