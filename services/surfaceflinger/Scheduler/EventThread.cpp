@@ -48,6 +48,7 @@
 #include "FrameTimeline.h"
 #include "VSyncDispatch.h"
 
+#include <com_android_graphics_surfaceflinger_flags.h>
 #include "EventThread.h"
 
 #undef LOG_TAG
@@ -259,25 +260,52 @@ binder::Status EventThreadConnection::getSchedulingPolicy(gui::SchedulingPolicy*
 }
 
 status_t EventThreadConnection::postEvent(const DisplayEventReceiver::Event& event) {
+    std::scoped_lock lock(mLock);
     constexpr auto toStatus = [](ssize_t size) {
         return size < 0 ? status_t(size) : status_t(NO_ERROR);
     };
 
-    if (event.header.type == DisplayEventReceiver::DISPLAY_EVENT_FRAME_RATE_OVERRIDE ||
-        event.header.type == DisplayEventReceiver::DISPLAY_EVENT_FRAME_RATE_OVERRIDE_FLUSH) {
-        mPendingEvents.emplace_back(event);
-        if (event.header.type == DisplayEventReceiver::DISPLAY_EVENT_FRAME_RATE_OVERRIDE) {
-            return status_t(NO_ERROR);
-        }
+    const bool isCritical = event.header.type == DisplayEventType::DISPLAY_EVENT_HOTPLUG ||
+            event.header.type == DisplayEventType::DISPLAY_EVENT_MODE_AND_FRAME_RATE_CHANGE ||
+            event.header.type == DisplayEventType::DISPLAY_EVENT_HDCP_LEVELS_CHANGE ||
+            event.header.type == DisplayEventType::DISPLAY_EVENT_MODE_REJECTION;
 
-        auto size = DisplayEventReceiver::sendEvents(&mChannel, mPendingEvents.data(),
-                                                     mPendingEvents.size());
-        mPendingEvents.clear();
-        return toStatus(size);
+    switch (event.header.type) {
+        case DisplayEventType::DISPLAY_EVENT_FRAME_RATE_OVERRIDE:
+            [[fallthrough]];
+        case DisplayEventType::DISPLAY_EVENT_SUPPORTED_REFRESH_RATE:
+            mPendingEvents.emplace_back(event);
+            return NO_ERROR;
+        default:
+            break;
     }
 
-    auto size = DisplayEventReceiver::sendEvents(&mChannel, &event, 1);
-    return toStatus(size);
+    mPendingEvents.emplace_back(event);
+    const auto size = DisplayEventReceiver::sendEvents(&mChannel, mPendingEvents.data(),
+                                                       mPendingEvents.size());
+    status_t status = toStatus(size);
+
+    // Queue critical events on socket buffer congestion if gated by flag
+    if ((status == -EAGAIN || status == -EMSGSIZE) &&
+        com::android::graphics::surfaceflinger::flags::event_thread_congestion_queue()) {
+        for (const auto& pendingEvent : mPendingEvents) {
+            const bool isPendingEventCritical =
+                    pendingEvent.header.type == DisplayEventType::DISPLAY_EVENT_HOTPLUG ||
+                    pendingEvent.header.type ==
+                            DisplayEventType::DISPLAY_EVENT_MODE_AND_FRAME_RATE_CHANGE ||
+                    pendingEvent.header.type ==
+                            DisplayEventType::DISPLAY_EVENT_SUPPORTED_REFRESH_RATE ||
+                    pendingEvent.header.type ==
+                            DisplayEventType::DISPLAY_EVENT_HDCP_LEVELS_CHANGE ||
+                    pendingEvent.header.type == DisplayEventType::DISPLAY_EVENT_MODE_REJECTION;
+            if (isPendingEventCritical) {
+                mCongestedCriticalEvents.push_back(pendingEvent);
+            }
+        }
+    }
+    mPendingEvents.clear();
+
+    return status;
 }
 
 // ---------------------------------------------------------------------------
@@ -516,6 +544,36 @@ void EventThread::threadMain(std::unique_lock<std::mutex>& lock) {
     DisplayEventConsumers consumers;
 
     while (mState != State::Quit) {
+        // Retry flushing congested critical events at the start of each loop
+        if (com::android::graphics::surfaceflinger::flags::event_thread_congestion_queue()) {
+            auto connectionIt = mDisplayEventConnections.begin();
+            while (connectionIt != mDisplayEventConnections.end()) {
+                if (const auto connection = connectionIt->promote()) {
+                    std::scoped_lock connectionLock(connection->mLock);
+                    auto& queue = connection->mCongestedCriticalEvents;
+                    while (!queue.empty()) {
+                        auto& congestedEvent = queue.front();
+                        auto res = DisplayEventReceiver::sendEvents(&connection->mChannel,
+                                                                    &congestedEvent, 1);
+                        if (res >= 0) {
+                            queue.erase(queue.begin());
+                            ALOGI("Successfully flushed congested critical display event of type %d"
+                                  " for %s",
+                                  congestedEvent.header.type, toString(*connection).c_str());
+                        } else if (res == -EAGAIN) {
+                            break;
+                        } else {
+                            removeDisplayEventConnectionLocked(connection);
+                            break;
+                        }
+                    }
+                    ++connectionIt;
+                } else {
+                    connectionIt = mDisplayEventConnections.erase(connectionIt);
+                }
+            }
+        }
+
         std::optional<DisplayEventReceiver::Event> event;
 
         // Determine next event to dispatch.
@@ -593,7 +651,22 @@ void EventThread::threadMain(std::unique_lock<std::mutex>& lock) {
         }
 
         // Wait for event or client registration/request.
-        if (mState == State::Idle) {
+        bool hasCongestedEvents = false;
+        if (com::android::graphics::surfaceflinger::flags::event_thread_congestion_queue()) {
+            for (const auto& connectionWeak : mDisplayEventConnections) {
+                if (const auto connection = connectionWeak.promote()) {
+                    std::scoped_lock connectionLock(connection->mLock);
+                    if (!connection->mCongestedCriticalEvents.empty()) {
+                        hasCongestedEvents = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (hasCongestedEvents) {
+            mCondition.wait_for(lock, 10ms);
+        } else if (mState == State::Idle) {
             mCondition.wait(lock);
         } else {
             // Generate a fake VSYNC after a long timeout in case the driver stalls. When the
@@ -776,10 +849,18 @@ void EventThread::dispatchEvent(const DisplayEventReceiver::Event& event,
                 break;
 
             case -EAGAIN:
-                // TODO: Try again if pipe is full.
                 ALOGW("Failed dispatching %s for %s", toString(event).c_str(),
                       toString(*consumer).c_str());
                 break;
+
+            case -EMSGSIZE:
+                if (com::android::graphics::surfaceflinger::flags::
+                            event_thread_congestion_queue()) {
+                    ALOGW("Failed dispatching %s for %s due to EMSGSIZE", toString(event).c_str(),
+                          toString(*consumer).c_str());
+                    break;
+                }
+                [[fallthrough]];
 
             default:
                 // Treat EPIPE and other errors as fatal.

@@ -937,6 +937,312 @@ TEST_F(EventThreadTest, connectionsWithSameUidReceiveBufferStuffing) {
     expectQueuedBufferCountReceivedByConnection(secondConnectionEventRecorder, 3);
 }
 
+TEST_F(EventThreadTest, connectionChannelHasDefaultBufferSize) {
+    // Verify that EventThreadConnection does NOT use a large socket buffer by default,
+    // keeping the memory footprint minimal (satisfying Code Purple requirements).
+    setupEventThread();
+
+    sp<EventThreadConnection> realConnection =
+            sp<EventThreadConnection>::make(mThread.get(), mConnectionUid, getpid(),
+                                            EventRegistrationFlags{});
+
+    gui::BitTube tube;
+    realConnection->stealReceiveChannel(&tube);
+
+    int sendFd = tube.getSendFd();
+    ASSERT_GE(sendFd, 0);
+
+    int sndBufSize = 0;
+    socklen_t len = sizeof(sndBufSize);
+    int err = getsockopt(sendFd, SOL_SOCKET, SO_SNDBUF, &sndBufSize, &len);
+    ASSERT_EQ(0, err) << "Failed to getsockopt SO_SNDBUF: " << strerror(errno);
+
+    // The default socket buffer size should be small.
+    // It must be strictly less than the 256KB large buffer we avoided.
+    EXPECT_LT(sndBufSize, 256 * 1024);
+}
+
+TEST_F(EventThreadTest, congestedConnectionCriticalEventsQueued) {
+    SET_FLAG_FOR_TEST(com::android::graphics::surfaceflinger::flags::event_thread_congestion_queue,
+                      true);
+    setupEventThread();
+
+    auto makeHotplugEvent = [](PhysicalDisplayId displayId, nsecs_t timestamp, bool connected) {
+        DisplayEventReceiver::Event event;
+        event.header = {DisplayEventType::DISPLAY_EVENT_HOTPLUG, displayId, timestamp};
+        event.hotplug.connected = connected;
+        return event;
+    };
+
+    // Create a real connection with a small default 4KB socket buffer
+    sp<EventThreadConnection> realConnection =
+            sp<EventThreadConnection>::make(mThread.get(), mConnectionUid, getpid(),
+                                            EventRegistrationFlags{});
+    mThread->registerDisplayEventConnection(realConnection);
+
+    gui::BitTube tube;
+    realConnection->stealReceiveChannel(&tube);
+
+    // Flood the socket with hotplug events until it returns -EAGAIN.
+    int result = 0;
+    int attempts = 0;
+    while (result >= 0 && attempts < 2000) {
+        attempts++;
+        result = realConnection->postEvent(makeHotplugEvent(INTERNAL_DISPLAY_ID, attempts, false));
+    }
+
+    // Once the socket is full, postEvent must return -EAGAIN
+    ASSERT_EQ(-EAGAIN, result) << "Socket did not overflow as expected";
+
+    // Send a critical hotplug event that must be queued in heap instead of dropped
+    nsecs_t criticalTimestamp = 99999;
+    status_t postStatus = realConnection->postEvent(
+            makeHotplugEvent(INTERNAL_DISPLAY_ID, criticalTimestamp, true));
+    ASSERT_EQ(-EAGAIN, postStatus) << "Critical event did not return -EAGAIN";
+
+    // Read from the tube to empty the socket buffer, making it writeable again
+    DisplayEventReceiver::Event buffer[2000];
+    ssize_t numRead = gui::BitTube::recvObjects(&tube, buffer, 2000);
+    ASSERT_GT(numRead, 0) << "Failed to read events from tube";
+
+    // Wake up and trigger EventThread loop.
+    // EventThread's threadMain loop should run, flush the queue, and successfully
+    // deliver the critical hotplug event!
+    mThread->onHotplugReceived(INTERNAL_DISPLAY_ID, true); // Wakes up threadMain
+
+    // Wait and read from the tube again to find our critical hotplug event with timestamp 99999
+    bool foundCriticalEvent = false;
+    for (int retry = 0; retry < 10 && !foundCriticalEvent; retry++) {
+        std::this_thread::sleep_for(10ms);
+        DisplayEventReceiver::Event retryBuffer[10];
+        ssize_t readCount = gui::BitTube::recvObjects(&tube, retryBuffer, 10);
+        for (ssize_t i = 0; i < readCount; i++) {
+            if (retryBuffer[i].header.type == DisplayEventType::DISPLAY_EVENT_HOTPLUG &&
+                retryBuffer[i].header.timestamp == criticalTimestamp &&
+                retryBuffer[i].hotplug.connected == true) {
+                foundCriticalEvent = true;
+                break;
+            }
+        }
+    }
+
+    EXPECT_TRUE(foundCriticalEvent)
+            << "Critical hotplug event was not successfully flushed and delivered";
+}
+
+TEST_F(EventThreadTest, congestedConnectionCriticalEventsDroppedWhenFlagDisabled) {
+    SET_FLAG_FOR_TEST(com::android::graphics::surfaceflinger::flags::event_thread_congestion_queue,
+                      false);
+    setupEventThread();
+
+    auto makeHotplugEvent = [](PhysicalDisplayId displayId, nsecs_t timestamp, bool connected) {
+        DisplayEventReceiver::Event event;
+        event.header = {DisplayEventType::DISPLAY_EVENT_HOTPLUG, displayId, timestamp};
+        event.hotplug.connected = connected;
+        return event;
+    };
+
+    sp<EventThreadConnection> realConnection =
+            sp<EventThreadConnection>::make(mThread.get(), mConnectionUid, getpid(),
+                                            EventRegistrationFlags{});
+    mThread->registerDisplayEventConnection(realConnection);
+
+    gui::BitTube tube;
+    realConnection->stealReceiveChannel(&tube);
+
+    // Flood the socket
+    int result = 0;
+    int attempts = 0;
+    while (result >= 0 && attempts < 2000) {
+        attempts++;
+        result = realConnection->postEvent(makeHotplugEvent(INTERNAL_DISPLAY_ID, attempts, false));
+    }
+    ASSERT_EQ(-EAGAIN, result);
+
+    // Send a critical event with timestamp 99999. It should NOT be queued because flag is false.
+    nsecs_t criticalTimestamp = 99999;
+    status_t postStatus = realConnection->postEvent(
+            makeHotplugEvent(INTERNAL_DISPLAY_ID, criticalTimestamp, true));
+    ASSERT_EQ(-EAGAIN, postStatus);
+
+    // Empty the socket buffer
+    DisplayEventReceiver::Event buffer[2000];
+    ssize_t numRead = gui::BitTube::recvObjects(&tube, buffer, 2000);
+    ASSERT_GT(numRead, 0);
+
+    // Trigger EventThread loop
+    mThread->onHotplugReceived(INTERNAL_DISPLAY_ID, true);
+
+    // Verify critical hotplug event is NOT found (it was dropped)
+    bool foundCriticalEvent = false;
+    for (int retry = 0; retry < 10 && !foundCriticalEvent; retry++) {
+        std::this_thread::sleep_for(10ms);
+        DisplayEventReceiver::Event retryBuffer[10];
+        ssize_t readCount = gui::BitTube::recvObjects(&tube, retryBuffer, 10);
+        for (ssize_t i = 0; i < readCount; i++) {
+            if (retryBuffer[i].header.type == DisplayEventType::DISPLAY_EVENT_HOTPLUG &&
+                retryBuffer[i].header.timestamp == criticalTimestamp) {
+                foundCriticalEvent = true;
+                break;
+            }
+        }
+    }
+    EXPECT_FALSE(foundCriticalEvent)
+            << "Critical event was unexpectedly delivered when flag is disabled";
+}
+
+TEST_F(EventThreadTest, congestedConnectionModesChangeQueuedAndFlushed) {
+    SET_FLAG_FOR_TEST(com::android::graphics::surfaceflinger::flags::event_thread_congestion_queue,
+                      true);
+    setupEventThread();
+
+    auto makeModeChangeEvent = [](PhysicalDisplayId displayId, nsecs_t timestamp) {
+        DisplayEventReceiver::Event event;
+        event.header = {DisplayEventType::DISPLAY_EVENT_MODE_AND_FRAME_RATE_CHANGE, displayId,
+                        timestamp};
+        event.modeChange.modeId = 1;
+        event.modeChange.vsyncPeriod = 16666666;
+        return event;
+    };
+
+    sp<EventThreadConnection> realConnection = sp<EventThreadConnection>::
+            make(mThread.get(), mConnectionUid, getpid(),
+                 EventRegistrationFlags{gui::ISurfaceComposer::EventRegistration::modeChanged});
+    mThread->registerDisplayEventConnection(realConnection);
+
+    gui::BitTube tube;
+    realConnection->stealReceiveChannel(&tube);
+
+    // Flood the socket with dummy hotplug events first
+    int result = 0;
+    int attempts = 0;
+    while (result >= 0 && attempts < 2000) {
+        attempts++;
+        DisplayEventReceiver::Event dummyHotplug;
+        dummyHotplug.header = {DisplayEventType::DISPLAY_EVENT_HOTPLUG, INTERNAL_DISPLAY_ID,
+                               attempts};
+        dummyHotplug.hotplug.connected = false;
+        result = realConnection->postEvent(dummyHotplug);
+    }
+    ASSERT_EQ(-EAGAIN, result);
+
+    // Send a critical mode change event with timestamp 88888. It must be queued.
+    nsecs_t criticalTimestamp = 88888;
+    status_t postStatus =
+            realConnection->postEvent(makeModeChangeEvent(INTERNAL_DISPLAY_ID, criticalTimestamp));
+    ASSERT_EQ(-EAGAIN, postStatus);
+
+    // Empty the socket buffer
+    DisplayEventReceiver::Event buffer[2000];
+    ssize_t numRead = gui::BitTube::recvObjects(&tube, buffer, 2000);
+    ASSERT_GT(numRead, 0);
+
+    // Wake up EventThread loop
+    mThread->onHotplugReceived(INTERNAL_DISPLAY_ID, true);
+
+    // Verify critical mode change event is successfully flushed and delivered
+    bool foundCriticalEvent = false;
+    for (int retry = 0; retry < 10 && !foundCriticalEvent; retry++) {
+        std::this_thread::sleep_for(10ms);
+        DisplayEventReceiver::Event retryBuffer[10];
+        ssize_t readCount = gui::BitTube::recvObjects(&tube, retryBuffer, 10);
+        for (ssize_t i = 0; i < readCount; i++) {
+            if (retryBuffer[i].header.type ==
+                        DisplayEventType::DISPLAY_EVENT_MODE_AND_FRAME_RATE_CHANGE &&
+                retryBuffer[i].header.timestamp == criticalTimestamp) {
+                foundCriticalEvent = true;
+                break;
+            }
+        }
+    }
+    EXPECT_TRUE(foundCriticalEvent) << "Critical mode change event was not flushed and delivered";
+}
+
+TEST_F(EventThreadTest, congestedConnection179RefreshRatesQueuedAndFlushed) {
+    SET_FLAG_FOR_TEST(com::android::graphics::surfaceflinger::flags::event_thread_congestion_queue,
+                      true);
+    setupEventThread();
+
+    // Create a real connection with the default small socket buffer
+    sp<EventThreadConnection> realConnection = sp<EventThreadConnection>::
+            make(mThread.get(), mConnectionUid, getpid(),
+                 EventRegistrationFlags{gui::ISurfaceComposer::EventRegistration::modeChanged});
+    mThread->registerDisplayEventConnection(realConnection);
+
+    gui::BitTube tube;
+    realConnection->stealReceiveChannel(&tube);
+
+    // Prepare a simulated connection event with 179 supported refresh rates, plus 1 mode change
+    const auto mode = DisplayMode::Builder(hal::HWConfigId(0))
+                              .setPhysicalDisplayId(INTERNAL_DISPLAY_ID)
+                              .setId(DisplayModeId(9))
+                              .setVsyncPeriod(16666666)
+                              .build();
+    const Fps fps = mode->getPeakFps();
+
+    std::vector<float> supportedRefreshRates;
+    for (int i = 1; i <= 179; i++) {
+        supportedRefreshRates.push_back(60.0f + i * 0.1f);
+    }
+
+    // Trigger the bulk posting of 179 refresh rate events + 1 mode change event
+    mThread->onModeAndFrameRateOverridesChanged(INTERNAL_DISPLAY_ID, {fps, ftl::as_non_null(mode)},
+                                                /*overrides*/ {}, supportedRefreshRates, mOffsets);
+
+    // Since 179 events are posted, it will quickly overflow the default small socket buffer.
+    // Wait a short moment to allow EventThread's threadMain to dispatch and attempt to write
+    // all of them to the socket, resulting in some being queued in heap.
+    std::this_thread::sleep_for(50ms);
+
+    // Read all events currently in the socket buffer to empty it completely
+    std::vector<DisplayEventReceiver::Event> readEvents;
+    DisplayEventReceiver::Event tempBuffer[100];
+    ssize_t numRead = 0;
+    while ((numRead = gui::BitTube::recvObjects(&tube, tempBuffer, 100)) > 0) {
+        for (ssize_t i = 0; i < numRead; i++) {
+            readEvents.push_back(tempBuffer[i]);
+        }
+    }
+
+    // Read remaining events in chunks, triggering EventThread flush in each iteration
+    // until all 180 events are successfully read from the non-blocking socket.
+    int retries = 0;
+    while (readEvents.size() < 180 && retries < 50) {
+        retries++;
+        mThread->onHotplugReceived(INTERNAL_DISPLAY_ID, true); // Wake up EventThread to flush
+        std::this_thread::sleep_for(10ms); // Wait for background thread to write
+
+        bool readSome = false;
+        while ((numRead = gui::BitTube::recvObjects(&tube, tempBuffer, 100)) > 0) {
+            readSome = true;
+            for (ssize_t i = 0; i < numRead; i++) {
+                readEvents.push_back(tempBuffer[i]);
+            }
+        }
+        if (!readSome) {
+            std::this_thread::sleep_for(10ms);
+        }
+    }
+
+    // We expect ALL 179 refresh rate change events + 1 mode change event to be delivered
+    // successfully!
+    int refreshRateEventCount = 0;
+    bool foundModeChangeEvent = false;
+
+    for (const auto& event : readEvents) {
+        if (event.header.type == DisplayEventType::DISPLAY_EVENT_SUPPORTED_REFRESH_RATE) {
+            refreshRateEventCount++;
+        } else if (event.header.type ==
+                   DisplayEventType::DISPLAY_EVENT_MODE_AND_FRAME_RATE_CHANGE) {
+            foundModeChangeEvent = true;
+        }
+    }
+
+    EXPECT_EQ(179, refreshRateEventCount)
+            << "Not all 179 refresh rate events were successfully delivered";
+    EXPECT_TRUE(foundModeChangeEvent) << "The critical mode change event was dropped";
+}
+
 } // namespace
 } // namespace android
 

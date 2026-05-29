@@ -142,6 +142,16 @@ flag {
 } # display_config_error_hal
 
 flag {
+  name: "event_thread_congestion_queue"
+  namespace: "core_graphics"
+  description: "Guards the dynamic congestion queue in native EventThread to prevent critical display events from being silently dropped on socket buffer congestion (-EAGAIN)."
+  bug: "516531034"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+} # event_thread_congestion_queue
+
+flag {
   name: "filter_frames_before_trace_starts"
   namespace: "core_graphics"
   description: "Do not trace FrameTimeline events for frames started before the trace started"

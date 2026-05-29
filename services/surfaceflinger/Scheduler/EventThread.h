@@ -46,6 +46,10 @@ class EventThread;
 class EventThreadTest;
 class SurfaceFlinger;
 
+namespace impl {
+class EventThread;
+} // namespace impl
+
 namespace frametimeline {
 class TokenManager;
 } // namespace frametimeline
@@ -90,12 +94,15 @@ public:
     Fps frameRate;
 
 private:
+    friend class EventThread;
+    friend class android::impl::EventThread;
     virtual void onFirstRef();
     EventThread* const mEventThread;
     std::mutex mLock;
     gui::BitTube mChannel GUARDED_BY(mLock);
 
     std::vector<DisplayEventReceiver::Event> mPendingEvents;
+    std::vector<DisplayEventReceiver::Event> mCongestedCriticalEvents;
 };
 
 class EventThread {
