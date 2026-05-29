@@ -1,6 +1,114 @@
 {
   "comments": [
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "f4380a6b_9d6fb92e",
+        "filename": "services/surfaceflinger/Scheduler/EventThread.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1587936
+      },
+      "writtenOn": "2026-05-29T17:51:37Z",
+      "side": 1,
+      "message": "Done. Extracted this block into a dedicated helper method queueIfCongestedLocked, significantly improving the readability and clarity of postEvent.",
+      "parentUuid": "426936f5_1b0d2430",
+      "revId": "0ebc75933b794102751931112b206be7730debb8",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "2157090c_fec007f5",
+        "filename": "services/surfaceflinger/Scheduler/EventThread.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1587936
+      },
+      "writtenOn": "2026-05-29T17:51:37Z",
+      "side": 1,
+      "message": "EMSGSIZE occurs when attempting to write a large multi-event batch that exceeds the total socket buffer capacity. Inside threadMain, we are flushing the congested events one-by-one (batch size of 1). A single display event is only 104 bytes, which is far below the socket capacity. Individual writes will therefore never trigger EMSGSIZE. Any other unexpected failure results in the connection being removed from EventThread, so explicit EMSGSIZE handling is not needed here.",
+      "parentUuid": "9c867c60_8d406170",
+      "revId": "0ebc75933b794102751931112b206be7730debb8",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "4a4de192_8bcca7d4",
+        "filename": "services/surfaceflinger/Scheduler/EventThread.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1587936
+      },
+      "writtenOn": "2026-05-29T17:51:37Z",
+      "side": 1,
+      "message": "Done. Moved the angle-bracketed flag include to the top of the file alongside the other system includes.",
+      "parentUuid": "1810020f_0b7f815d",
+      "revId": "0ebc75933b794102751931112b206be7730debb8",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "829b9df4_59afb934",
+        "filename": "services/surfaceflinger/Scheduler/EventThread.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1587936
+      },
+      "writtenOn": "2026-05-29T17:51:37Z",
+      "side": 1,
+      "message": "EAGAIN is returned when the socket buffer is temporarily full (congestion). EMSGSIZE is returned when the batch size of a bulk write exceeds the socket buffer capacity (e.g. writing all 180 refresh rates at once). In both cases, the events are safely queued in heap memory. Inside threadMain, we flush them one-by-one (size of 1). Single event writes are only 104 bytes, meaning they will never trigger EMSGSIZE. Thus, we only need to retry on EAGAIN (if the socket is still full). Any other error is treated as fatal and results in connection clean-up.",
+      "parentUuid": "6479d673_8016b92f",
+      "revId": "0ebc75933b794102751931112b206be7730debb8",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "86f5c4ce_0a5a8c5f",
+        "filename": "services/surfaceflinger/Scheduler/EventThread.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1587936
+      },
+      "writtenOn": "2026-05-29T17:51:37Z",
+      "side": 1,
+      "message": "Done. Extracted the congestion queueing logic into a helper method queueIfCongestedLocked. Regarding SUPPORTED_REFRESH_RATE: During display config changes, SurfaceFlinger posts the list of all supported refresh rates in bulk. On high-refresh-rate displays, this list easily overflows the non-blocking socket buffer (4KB), resulting in EAGAIN or EMSGSIZE. Treating these events as critical ensures they are not silently dropped, preventing display settings app desync. Standard VSYNC events are not critical and are never queued.",
+      "parentUuid": "d4a5b98a_6aaa6739",
+      "revId": "0ebc75933b794102751931112b206be7730debb8",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "dd904999_9e2c8acb",
+        "filename": "services/surfaceflinger/Scheduler/EventThread.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1587936
+      },
+      "writtenOn": "2026-05-29T17:51:37Z",
+      "side": 1,
+      "message": "Done. To completely avoid lock acquisition or iteration overhead in threadMain during normal operation, we introduced an atomic flag mHasCongestedConnections in EventThread. threadMain now performs a fast, lock-free check of this flag on every frame. The flag is set to true atomically when congestion occurs, and safely set back to false in threadMain only when all connection queues have been fully flushed.",
+      "parentUuid": "258e44eb_c82bea1a",
+      "revId": "0ebc75933b794102751931112b206be7730debb8",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "1810020f_0b7f815d",
