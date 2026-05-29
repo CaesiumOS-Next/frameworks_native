@@ -154,6 +154,24 @@
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "dabb28b2_8e50c66d",
+        "filename": "services/surfaceflinger/Scheduler/EventThread.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1587936
+      },
+      "writtenOn": "2026-05-29T18:00:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1810020f_0b7f815d",
+      "revId": "0ebc75933b794102751931112b206be7730debb8",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "d4a5b98a_6aaa6739",
@@ -167,6 +185,24 @@
       "writtenOn": "2026-05-29T17:12:32Z",
       "side": 1,
       "message": "Could you explain why the logic for DISPLAY_EVENT_SUPPORTED_REFRESH_RATE is batched with DISPLAY_EVENT_FRAME_RATE_OVERRIDE? Also, the change in logic for this section appears non-trivial and I\u0027d advocate for flagging this section too. \n\nFor easy readability and clarity, maybe just keep it as\n```\n// old logic\n\nif (flag_enabled) {\n// your changes\n}\n```",
+      "revId": "0ebc75933b794102751931112b206be7730debb8",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ec591324_06f960a7",
+        "filename": "services/surfaceflinger/Scheduler/EventThread.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1587936
+      },
+      "writtenOn": "2026-05-29T18:00:24Z",
+      "side": 1,
+      "message": "Extracted the congestion queueing logic into a helper method queueIfCongestedLocked. Regarding SUPPORTED_REFRESH_RATE: During display config changes, SurfaceFlinger posts the list of all supported refresh rates in bulk. On high-refresh-rate displays, this list easily overflows the non-blocking socket buffer (4KB), resulting in EAGAIN or EMSGSIZE. Treating these events as critical ensures they are not silently dropped, preventing display settings app desync. Standard VSYNC events are not critical and are never queued.",
+      "parentUuid": "d4a5b98a_6aaa6739",
       "revId": "0ebc75933b794102751931112b206be7730debb8",
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     },
@@ -226,6 +262,24 @@
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "10ee510f_bacc00f4",
+        "filename": "services/surfaceflinger/Scheduler/EventThread.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1587936
+      },
+      "writtenOn": "2026-05-29T18:00:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "426936f5_1b0d2430",
+      "revId": "0ebc75933b794102751931112b206be7730debb8",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "258e44eb_c82bea1a",
@@ -239,6 +293,24 @@
       "writtenOn": "2026-05-29T17:12:32Z",
       "side": 1,
       "message": "add check for `\u0026\u0026 !mCongestedCriticalEvents.empty()`. This loop runs every frame so it\u0027d be best to avoid unnecessary work where possible",
+      "revId": "0ebc75933b794102751931112b206be7730debb8",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "f43aab89_97a1e364",
+        "filename": "services/surfaceflinger/Scheduler/EventThread.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 548,
+      "author": {
+        "id": 1587936
+      },
+      "writtenOn": "2026-05-29T18:00:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "258e44eb_c82bea1a",
       "revId": "0ebc75933b794102751931112b206be7730debb8",
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     },
@@ -260,6 +332,24 @@
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "b3b9b804_926ef785",
+        "filename": "services/surfaceflinger/Scheduler/EventThread.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1587936
+      },
+      "writtenOn": "2026-05-29T18:00:24Z",
+      "side": 1,
+      "message": "EMSGSIZE occurs when attempting to write a large multi-event batch that exceeds the total socket buffer capacity. Inside threadMain, we are flushing the congested events one-by-one (batch size of 1). A single display event is only 104 bytes, which is far below the socket capacity. Individual writes will therefore never trigger EMSGSIZE. Any other unexpected failure results in the connection being removed from EventThread, so explicit EMSGSIZE handling is not needed here.",
+      "parentUuid": "9c867c60_8d406170",
+      "revId": "0ebc75933b794102751931112b206be7730debb8",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "6479d673_8016b92f",
@@ -273,6 +363,24 @@
       "writtenOn": "2026-05-29T17:12:32Z",
       "side": 1,
       "message": "Could you explain the differences between EAGAIN and EMSGSIZE in the context of the bug, and why we don\u0027t retry send on EMSGSIZE? (refer to earlier comment)",
+      "revId": "0ebc75933b794102751931112b206be7730debb8",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "7356abd4_28f32c35",
+        "filename": "services/surfaceflinger/Scheduler/EventThread.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 856,
+      "author": {
+        "id": 1587936
+      },
+      "writtenOn": "2026-05-29T18:00:24Z",
+      "side": 1,
+      "message": "EAGAIN is returned when the socket buffer is temporarily full (congestion). EMSGSIZE is returned when the batch size of a bulk write exceeds the socket buffer capacity (e.g. writing all 180 refresh rates at once). In both cases, the events are safely queued in heap memory. Inside threadMain, we flush them one-by-one (size of 1). Single event writes are only 104 bytes, meaning they will never trigger EMSGSIZE. Thus, we only need to retry on EAGAIN (if the socket is still full). Any other error is treated as fatal and results in connection clean-up.",
+      "parentUuid": "6479d673_8016b92f",
       "revId": "0ebc75933b794102751931112b206be7730debb8",
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     }
