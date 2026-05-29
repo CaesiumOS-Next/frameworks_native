@@ -96,6 +96,8 @@ private:
     gui::BitTube mChannel GUARDED_BY(mLock);
 
     std::vector<DisplayEventReceiver::Event> mPendingEvents;
+    std::vector<DisplayEventReceiver::Event> mCongestedCriticalEvents;
+    void queueIfCongestedLocked(status_t status, const std::vector<DisplayEventReceiver::Event>& events) REQUIRES(mLock);
 };
 
 class EventThread {
@@ -141,6 +143,8 @@ public:
 
     virtual void onHdcpLevelsChanged(PhysicalDisplayId displayId, int32_t connectedLevel,
                                      int32_t maxLevel) = 0;
+
+    std::atomic<bool> mHasCongestedConnections{false};
 
     // An elevated number of queued buffers in the server is detected. This propagates a
     // flag to Choreographer indicating that buffer stuffing recovery should begin.
