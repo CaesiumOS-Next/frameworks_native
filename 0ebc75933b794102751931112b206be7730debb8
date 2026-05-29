@@ -1,0 +1,172 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "1810020f_0b7f815d",
+        "filename": "services/surfaceflinger/Scheduler/EventThread.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1953840
+      },
+      "writtenOn": "2026-05-29T17:12:32Z",
+      "side": 1,
+      "message": "can you reorder this with the other angle bracketed includes?\n\n[order of includes](https://g3doc.corp.google.com/company/teams/android/bestpractices/android-cpp-style-guide.md?cl\u003dhead#order-of-includes)",
+      "fixSuggestions": [
+        {
+          "fixId": "aef22ee3_b0957391",
+          "description": "prompt_to_edit API",
+          "replacements": [
+            {
+              "path": "services/surfaceflinger/Scheduler/EventThread.cpp",
+              "range": {
+                "startLine": 1,
+                "startChar": 0,
+                "endLine": 1,
+                "endChar": 0
+              },
+              "replacement": "#include \u003ccom_android_graphics_surfaceflinger_flags.h\u003e\n"
+            },
+            {
+              "path": "services/surfaceflinger/Scheduler/EventThread.cpp",
+              "range": {
+                "startLine": 51,
+                "startChar": 0,
+                "endLine": 52,
+                "endChar": 0
+              },
+              "replacement": ""
+            }
+          ]
+        }
+      ],
+      "revId": "0ebc75933b794102751931112b206be7730debb8",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d4a5b98a_6aaa6739",
+        "filename": "services/surfaceflinger/Scheduler/EventThread.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1953840
+      },
+      "writtenOn": "2026-05-29T17:12:32Z",
+      "side": 1,
+      "message": "Could you explain why the logic for DISPLAY_EVENT_SUPPORTED_REFRESH_RATE is batched with DISPLAY_EVENT_FRAME_RATE_OVERRIDE? Also, the change in logic for this section appears non-trivial and I\u0027d advocate for flagging this section too. \n\nFor easy readability and clarity, maybe just keep it as\n```\n// old logic\n\nif (flag_enabled) {\n// your changes\n}\n```",
+      "revId": "0ebc75933b794102751931112b206be7730debb8",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "426936f5_1b0d2430",
+        "filename": "services/surfaceflinger/Scheduler/EventThread.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1953840
+      },
+      "writtenOn": "2026-05-29T17:12:32Z",
+      "side": 1,
+      "message": "put this into a separate helper method",
+      "fixSuggestions": [
+        {
+          "fixId": "590b74bf_55b94c37",
+          "description": "prompt_to_edit API",
+          "replacements": [
+            {
+              "path": "services/surfaceflinger/Scheduler/EventThread.cpp",
+              "range": {
+                "startLine": 1,
+                "startChar": 0,
+                "endLine": 1,
+                "endChar": 0
+              },
+              "replacement": "bool isCriticalEvent(const DisplayEventReceiver::Event\u0026 event) {\n    return event.header.type \u003d\u003d DisplayEventType::DISPLAY_EVENT_HOTPLUG ||\n            event.header.type \u003d\u003d DisplayEventType::DISPLAY_EVENT_MODE_AND_FRAME_RATE_CHANGE ||\n            event.header.type \u003d\u003d DisplayEventType::DISPLAY_EVENT_SUPPORTED_REFRESH_RATE ||\n            event.header.type \u003d\u003d DisplayEventType::DISPLAY_EVENT_HDCP_LEVELS_CHANGE ||\n            event.header.type \u003d\u003d DisplayEventType::DISPLAY_EVENT_MODE_REJECTION;\n}\n\n"
+            },
+            {
+              "path": "services/surfaceflinger/Scheduler/EventThread.cpp",
+              "range": {
+                "startLine": 268,
+                "startChar": 0,
+                "endLine": 273,
+                "endChar": 0
+              },
+              "replacement": ""
+            },
+            {
+              "path": "services/surfaceflinger/Scheduler/EventThread.cpp",
+              "range": {
+                "startLine": 292,
+                "startChar": 0,
+                "endLine": 302,
+                "endChar": 0
+              },
+              "replacement": "            if (isCriticalEvent(pendingEvent)) {\n"
+            }
+          ]
+        }
+      ],
+      "revId": "0ebc75933b794102751931112b206be7730debb8",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "258e44eb_c82bea1a",
+        "filename": "services/surfaceflinger/Scheduler/EventThread.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 548,
+      "author": {
+        "id": 1953840
+      },
+      "writtenOn": "2026-05-29T17:12:32Z",
+      "side": 1,
+      "message": "add check for `\u0026\u0026 !mCongestedCriticalEvents.empty()`. This loop runs every frame so it\u0027d be best to avoid unnecessary work where possible",
+      "revId": "0ebc75933b794102751931112b206be7730debb8",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "9c867c60_8d406170",
+        "filename": "services/surfaceflinger/Scheduler/EventThread.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1953840
+      },
+      "writtenOn": "2026-05-29T17:12:32Z",
+      "side": 1,
+      "message": "Does `res \u003d\u003d -EMSGSIZE` need to be considered again here?",
+      "revId": "0ebc75933b794102751931112b206be7730debb8",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6479d673_8016b92f",
+        "filename": "services/surfaceflinger/Scheduler/EventThread.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 856,
+      "author": {
+        "id": 1953840
+      },
+      "writtenOn": "2026-05-29T17:12:32Z",
+      "side": 1,
+      "message": "Could you explain the differences between EAGAIN and EMSGSIZE in the context of the bug, and why we don\u0027t retry send on EMSGSIZE? (refer to earlier comment)",
+      "revId": "0ebc75933b794102751931112b206be7730debb8",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    }
+  ]
+}
