@@ -4,26 +4,14 @@ package: "com.android.graphics.surfaceflinger.flags"
 container: "system"
 
 flag {
-  name: "adpf_fmq_sf"
-  namespace: "game"
-  description: "Guards use of the ADPF FMQ system specifically for SurfaceFlinger"
-  bug: "315894228"
-  is_fixed_read_only: true
-} # adpf_fmq_sf
-
-flag {
-  name: "adpf_gpu_sf"
-  namespace: "game"
-  description: "Guards use of the sending ADPF GPU duration hint and load hints from SurfaceFlinger to Power HAL"
-  bug: "284324521"
-} # adpf_gpu_sf
-
-flag {
-  name: "adpf_native_session_manager"
-  namespace: "game"
-  description: "Controls ADPF SessionManager being enabled in SF"
-  bug: "367803904"
-} # adpf_sessionmanager
+  name: "align_adpf_with_sf_opt_policy"
+  namespace: "window_surfaces"
+  description: "Align ADPF with SF optimization policy"
+  bug: "477953599"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+} # align_adpf_with_sf_opt_policy
 
 flag {
   name: "arr_setframerate_api"
@@ -35,14 +23,6 @@ flag {
 } # arr_setframerate_api
 
 flag {
-  name: "arr_setframerate_gte_enum"
-  namespace: "core_graphics"
-  description: "Exposes GTE (greater than or equal to) enum for Android 16"
-  bug: "380949716"
-  is_fixed_read_only: true
-} # arr_setframerate_gte_enum
-
-flag {
   name: "arr_surfacecontrol_setframerate_api"
   namespace: "core_graphics"
   description: "New SDK SurfaceControl.Transaction#setFrameRate API for Android 16"
@@ -52,42 +32,105 @@ flag {
 } # arr_surfacecontrol_setframerate_api
 
 flag {
-  name: "begone_bright_hlg"
+  name: "bugfix_apply_selected_mode_on_hotplug"
   namespace: "core_graphics"
-  description: "Caps HLG brightness relative to SDR"
-  bug: "362510107"
-  is_fixed_read_only: true
-} # begone_bright_hlg
+  description: "Fix a bug where the mode selected as default if none was set, is not applied"
+  bug: "510418462"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+} # bugfix_clear_content_requirements
 
 flag {
-  name: "ce_fence_promise"
+  name: "bugfix_clear_content_requirements"
+  namespace: "core_graphics"
+  description: "Fix a bug where clearContentRequirements is set but shouldn't"
+  bug: "502175839"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+} # bugfix_clear_content_requirements
+
+flag {
+  name: "bugfix_clear_present_fence_when_display_off"
+  namespace: "core_graphics"
+  description: "Clear the last present fence when the display transitions to OFF."
+  bug: "450351988"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+} # bugfix_clear_present_fence_when_display_off
+
+flag {
+  name: "bugfix_layer_caching_color_inversion_flickering"
+  namespace: "core_graphics"
+  description: "Fixes the flickering when turning on color inversion and the layer caching"
+  bug: "404903019"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+} # bugfix_layer_caching_color_inversion_flickering
+
+flag {
+  name: "bugfix_on_display_mode_changed_display_id"
+  namespace: "core_graphics"
+  description: "Fix a bug to send the correct display id from onDisplayModeAndFrameRateOverridesChanged"
+  bug: "495945720"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+} # bugfix_on_display_mode_changed_display_id
+
+flag {
+  name: "bugfix_resize_virtual_display_surfaces"
+  namespace: "core_graphics"
+  description: "Surfaces should be resized when virtual display size is set"
+  bug: "391237198"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+} # bugfix_resize_virtual_display_surfaces
+
+flag {
+  name: "color_transform_box_shadows_and_border"
+  namespace: "core_graphics"
+  description: "Passes colorTransform filter to BoxShadows and Borders to match image colorTranform and to fix flickering issues with layer caching"
+  bug: "491171525"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+} # color_transform_box_shadows_and_border
+
+flag {
+  name: "color_transform_translation"
+  namespace: "core_graphics"
+  description: "Fixes a bug that incorrectly applies a the translation component of global color transforms to source alpha"
+  bug: "432040449"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+} # color_transform_translation
+
+flag {
+  name: "configure_work_duration"
   namespace: "window_surfaces"
-  description: "Moves logic for buffer release fences into LayerFE"
-  bug: "294936197"
-  is_fixed_read_only: true
-  metadata {
-    purpose: PURPOSE_BUGFIX
-  }
- } # ce_fence_promise
+  description: "Enable the work duration configuration via DisplayModeSpecs."
+  bug: "399491928"
+} # configure_work_duration
 
 flag {
-  name: "commit_not_composited"
-  namespace: "core_graphics"
-  description: "mark frames as non janky if the transaction resulted in no composition"
-  bug: "340633280"
-  is_fixed_read_only: true
-  metadata {
-    purpose: PURPOSE_BUGFIX
-  }
-} # commit_not_composited
-
-flag {
-  name: "connected_display_hdr"
-  namespace: "core_graphics"
-  description: "enable connected display hdr capability"
+  name: "connected_display_hdr_v2"
+  namespace: "desktop_display"
+  description: "enable connected display hdr selection"
   bug: "374182788"
-  is_fixed_read_only: true
-} # connected_display_hdr
+} # connected_display_hdr_v2
+
+flag {
+  name: "connected_display_hdr_v3"
+  namespace: "core_graphics"
+  description: "enable connected display hdr"
+  bug: "374182788"
+} # connected_display_hdr_v3
 
 flag {
   name: "correct_dpi_with_display_size"
@@ -101,75 +144,122 @@ flag {
 } # correct_dpi_with_display_size
 
 flag {
-  name: "deprecate_frame_tracker"
+  name: "disable_synthetic_vsync_for_performance"
   namespace: "core_graphics"
-  description: "Deprecate using FrameTracker to accumulate and provide FrameStats"
-  bug: "241394120"
-  is_fixed_read_only: true
+  description: "Turn off synthetic VSYNC when adjusting thread scheduling for performance"
+  bug: "406147398"
   metadata {
     purpose: PURPOSE_BUGFIX
   }
-} # deprecate_frame_tracker
+  is_exported: true
+} # disable_synthetic_vsync_for_performance
 
 flag {
-  name: "deprecate_vsync_sf"
-  namespace: "core_graphics"
-  description: "Depracate eVsyncSourceSurfaceFlinger and use vsync_app everywhere"
-  bug: "162235855"
-  is_fixed_read_only: true
-  metadata {
-    purpose: PURPOSE_BUGFIX
-  }
-} # deprecate_vsync_sf
-
-flag {
-  name: "detached_mirror"
+  name: "disable_transparent_region_hint"
   namespace: "window_surfaces"
-  description: "Ignore local transform when mirroring a partial hierarchy"
-  bug: "337845753"
-  is_fixed_read_only: true
+  description: "Disable using transparent region hints when cropping layers"
+  bug: "432537641"
   metadata {
     purpose: PURPOSE_BUGFIX
   }
-} # detached_mirror
+} # disable_transparent_region_hint
 
 flag {
-  name: "display_config_error_hal"
-  namespace: "core_graphics"
-  description: "Report HAL display configuration errors like modeset failure or link training failure"
-  bug: "374184110"
-  is_fixed_read_only: true
-} # display_config_error_hal
-
-flag {
-  name: "filter_frames_before_trace_starts"
-  namespace: "core_graphics"
-  description: "Do not trace FrameTimeline events for frames started before the trace started"
-  bug: "364194637"
-  is_fixed_read_only: true
+  name: "enable_color_correction_bugfix"
+  namespace: "accessibility"
+  description: "Enable a corrected color correction (daltonization) algorithm matching the one used in ChromeOS"
+  bug: "322829049"
   metadata {
     purpose: PURPOSE_BUGFIX
   }
-} # filter_frames_before_trace_starts
+} # enable_color_correction_bugfix
 
 flag {
-  name: "flush_buffer_slots_to_uncache"
+  name: "event_thread_congestion_queue"
   namespace: "core_graphics"
-  description: "Flush DisplayCommands for disabled displays in order to uncache requested buffers."
-  bug: "330806421"
-  is_fixed_read_only: true
+  description: "Guards the dynamic congestion queue in native EventThread to prevent critical display events from being silently dropped on socket buffer congestion (-EAGAIN)."
+  bug: "516531034"
   metadata {
     purpose: PURPOSE_BUGFIX
   }
-} # flush_buffer_slots_to_uncache
+} # event_thread_congestion_queue
 
 flag {
-  name: "force_compile_graphite_renderengine"
+  name: "improve_color_correction_non_desktop"
+  namespace: "accessibility"
+  description: "Improve color correction for non-desktop"
+  bug: "512356609"
+} # improve_color_correction_non_desktop
+
+flag {
+  name: "display_command_modeset"
   namespace: "core_graphics"
-  description: "Compile Skia's Graphite Vulkan backend in RenderEngine, but do NOT enable it, unless graphite_renderengine is also set. It can also be enabled with the debug.renderengine.graphite system property for testing. In contrast, the graphite_renderengine flag both compiles AND enables Graphite in RenderEngine."
-  bug: "293371537"
-  is_fixed_read_only: true
-} # force_compile_graphite_renderengine
+  description: "Guards use of the new display command modeset"
+  bug: "373900661"
+} # display_command_modeset
+
+flag {
+  name: "exempt_cursor_layer_caching"
+  namespace: "core_graphics"
+  description: "Exempt cursor layers from being part of layer caching."
+  bug: "490128621"
+} # exempt_cursor_layer_caching
+
+flag {
+  name: "fence_handling"
+  namespace: "window_surfaces"
+  description: "Unblock main thread with asynchronous fence handling"
+  bug: "428611036"
+} # fence_handling
+
+flag {
+  name: "follower_arbitrary_refresh_rate_selection"
+  namespace: "desktop_display"
+  description: "Enables selection of any refresh rate for the follower display instead of one matching the pacesetter."
+  bug: "371584290"
+} # follower_arbitrary_refresh_rate_selection
+
+flag {
+  name: "follower_arbitrary_refresh_rate_selection_platform"
+  namespace: "core_graphics"
+  description: "Platform flag to enable selection of any refresh rate for the follower display instead of one matching the pacesetter."
+  bug: "371584290"
+} # follower_arbitrary_refresh_rate_selection_platform
+
+flag {
+  name: "follower_display_backpressure"
+  namespace: "desktop_display"
+  description: "Skips presentation on a follower display if there is a pending present for the next follower vsync. Enables follower displays to present even when their refresh rate does not match the pacesetter display."
+  bug: "374072507"
+} # follower_display_backpressure
+
+flag {
+  name: "follower_display_backpressure_platform"
+  namespace: "core_graphics"
+  description: "Platform flag to skips presentation on a follower display if there is a pending present for the next follower vsync. Enables follower displays to present even when their refresh rate does not match the pacesetter display."
+  bug: "374072507"
+} # follower_display_backpressure_platform
+
+flag {
+  name: "force_sdr_invalid_hdr_type"
+  namespace: "core_graphics"
+  description: "Allow OEMs to opt into receiving stronger signals about forced-SDR mode by sending forceHdrType=INVALID_HDR_TYPE into Composer HAL"
+  bug: "419756717"
+} # force_sdr_invalid_hdr_type
+
+flag {
+  name: "force_slower_follower_gpu_composition"
+  namespace: "desktop_display"
+  description: "Force slower connected displays to be GPU composited."
+  bug: "389982803"
+} # force_slower_follower_gpu_composition
+
+flag {
+  name: "force_slower_follower_gpu_composition_platform"
+  namespace: "core_graphics"
+  description: "Platform flag to force slower connected displays to be GPU composited."
+  bug: "389982803"
+} # force_slower_follower_gpu_composition_platform
 
 flag {
   name: "frame_rate_category_mrr"
@@ -183,30 +273,142 @@ flag {
 } # frame_rate_category_mrr
 
 flag {
+  name: "frontend_caching_v0"
+  namespace: "core_graphics"
+  description: "Enables caching of frontend layer states"
+  bug: "433229921"
+} # frontend_caching_v0
+
+flag {
+  name: "get_display_known_vsync_sample_enabled"
+  namespace: "core_graphics"
+  description: "Enables querying the last known vsync timestamp from the hwc service."
+  bug: "441162952"
+} # get_display_known_vsync_sample_enabled
+
+flag {
   name: "graphite_renderengine_preview_rollout"
   namespace: "core_graphics"
-  description: "R/W flag to enable Skia's Graphite Vulkan backend in RenderEngine, IF it is already compiled with force_compile_graphite_renderengine, AND the debug.renderengine.graphite_preview_optin sysprop is set to true."
+  description: "R/W flag to enable Skia's Graphite Vulkan backend in RenderEngine, if the device-specific debug.renderengine.graphite_preview_optin sysprop also is set to true."
   bug: "293371537"
 } # graphite_renderengine_preview_rollout
 
 flag {
-  name: "latch_unsignaled_with_auto_refresh_changed"
+  name: "graphite_renderengine_preview2_rollout"
   namespace: "core_graphics"
-  description: "Ignore eAutoRefreshChanged with latch unsignaled"
-  bug: "331513837"
-  is_fixed_read_only: true
+  description: "Second wave R/W flag to enable Skia's Graphite Vulkan backend in RenderEngine, if the device-specific debug.renderengine.graphite_preview2_optin sysprop also is set to true."
+  bug: "293371537"
+} # graphite_renderengine_preview2_rollout
+
+flag {
+  name: "graphite_renderengine_desktop_rollout"
+  namespace: "core_graphics"
+  description: "R/W flag to enable Skia's Graphite Vulkan backend in RenderEngine for Desktop devices, IF the debug.renderengine.graphite_desktop_optin sysprop is set to true."
+  bug: "436872839"
+} # graphite_renderengine_desktop_rollout
+
+flag {
+  name: "hwc_buffer_override_skip"
+  namespace: "core_graphics"
+  description: "Include non-client HWC layers when checking for overriden buffers to skip."
+  bug: "491180382"
   metadata {
     purpose: PURPOSE_BUGFIX
   }
-} # latch_unsignaled_with_auto_refresh_changed
+} # hwc_buffer_override_skip
 
 flag {
-  name: "local_tonemap_screenshots"
+  name: "layer_caching_allow_excluded_protected_layers"
   namespace: "core_graphics"
-  description: "Enables local tonemapping when capturing screenshots"
-  bug: "329464641"
-  is_fixed_read_only: true
-} # local_tonemap_screenshots
+  description: "Allow layer caching when protected layers exist but exclude them from the cache itself"
+  bug: "500751387"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+} # layer_caching_allow_excluded_protected_layers
+
+flag {
+  name: "layer_caching_desktop_rollout"
+  namespace: "core_graphics"
+  description: "R/W flag to enable layer caching for Desktop devices, IF the debug.sf.layer_caching_desktop_rollout_optin sysprop is set to true."
+  bug: "488006412"
+} # layer_caching_desktop_rollout
+
+flag {
+  name: "layer_caching_geometry_changes"
+  namespace: "core_graphics"
+  description: "Optimize layer caching for geometry changes"
+  bug: "330161045"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+} # layer_caching_geometry_changes
+
+flag {
+  name: "layer_caching_new_layer_exclusion"
+  namespace: "core_graphics"
+  description: "Optimize layer caching by excluding new layers from planning for a tunable duration"
+  bug: "507891064"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+} # layer_caching_new_layer_exclusion
+
+flag {
+  name: "lower_blur_fps"
+  namespace: "core_graphics"
+  description: "R/W flag to enable RenderEngine's capability to limit blur generation to the fps requested by the client."
+  bug: "372489580"
+} # lower_blur_fps
+
+flag {
+
+  name: "md_degrade_hdr"
+  namespace: "core_graphics"
+  description: "Degrades displays from HDR to SDR during multidisplay mirroring"
+  bug: "443315364"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+} # md_degrade_hdr
+
+flag {
+  name: "mrr_full_frame_rate_list"
+  namespace: "core_graphics"
+  description: "Enables all native refresh rates in the full frame rate list for MRR devices"
+  bug: "453004817"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+} # mrr_full_frame_rate_list
+
+flag {
+  name: "mirror_uid_filtering"
+  namespace: "window_surfaces"
+  description: "Enables UID filtering when building layer snapshots of mirrors. Layers that have different UID from the mirror root's will be dropped "
+  bug: "437391557"
+} # mirror_uid_filtering
+
+flag {
+  name: "mirror_with_crop"
+  namespace: "window_surfaces"
+  description: "Enables mirroring a layer with cropping"
+  bug: "474153029"
+} # mirror_with_crop
+
+flag {
+  name: "modeset_multi_display"
+  namespace: "core_graphics"
+  description: "Allows multiple display to be modeset at the same time."
+  bug: "373900661"
+} # modeset_multi_display
+
+flag {
+  name: "monitor_buffer_fences"
+  namespace: "core_graphics"
+  description: "Monitors fences for each buffer"
+  bug: "360932099"
+} # monitor_buffer_fences
 
 flag {
   name: "no_vsyncs_on_screen_off"
@@ -217,15 +419,96 @@ flag {
 } # no_vsyncs_on_screen_off
 
 flag {
-  name: "single_hop_screenshot"
+  name: "offload_gpu_composition"
   namespace: "window_surfaces"
-  description: "Only access SF main thread once during a screenshot"
-  bug: "285553970"
+  description: "Offload virtual display client composition from main thread"
+  bug: "428611036"
   is_fixed_read_only: true
+} # offload_gpu_composition
+
+flag {
+  name: "parse_edid_version_and_input_type_v2"
+  namespace: "serviceability"
+  description: "Extends the display information parsed and provided by SurfaceFlinger to include EDID version and input type."
+  bug: "420767380"
+  is_exported: true
+} # parse_edid_version_and_input_type_v2
+
+flag {
+  name: "re_powered_off_displays_inform_cache_budgets"
+  namespace: "core_graphics"
+  description: "Allow powered off displays to contribute to RenderEngine's cache budgets, since displays aren't fully initialized when cache budget calculations are needed during boot."
+  bug: "446658240"
   metadata {
     purpose: PURPOSE_BUGFIX
   }
- } # single_hop_screenshot
+} # re_powered_off_displays_inform_cache_budgets
+
+flag {
+  name: "readback_screenshot"
+  namespace: "core_graphics"
+  description: "Allows devices to use DPU readback for fullscreen screenshots"
+  bug: "384816457"
+  is_exported: true
+} # readback_screenshot
+
+flag {
+  name: "renderengine_gpu_stats_desktop_rollout"
+  namespace: "core_graphics"
+  description: "R/W flag to enable RenderEngine GPU stats for Desktop devices, IF the debug.sf.renderengine_gpu_stats_desktop_rollout sysprop is set to true."
+  bug: "487935517"
+} # renderengine_gpu_stats_desktop_rollout
+
+flag {
+    name: "renderengine_track_vulkan_gpu_memory"
+    namespace: "core_graphics"
+    description: "Track GPU memory allocated by the Vulkan driver from RenderEngine/Skia calls. Adds reports to dumpsys, on certain crashes, and causes unrecoverable allocation failures to crash earlier (with more context)."
+    bug: "503031507"
+} # renderengine_track_vulkan_gpu_memory
+
+flag {
+  name: "rounded_corner_opaque_optimization"
+  namespace: "window_surfaces"
+  description: "Accurately calculate opaque region for rounded corner layers to enable skip-layer optimization."
+  bug: "504717765"
+} # rounded_corner_opaque_optimization
+
+flag {
+  name: "set_client_drawn_corner_radii"
+  namespace: "window_surfaces"
+  description: "Add support for API to set distinct radii for each corner"
+  bug: "406554726"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+} # set_client_drawn_corner_radii
+
+flag {
+  name: "set_power_mode_async"
+  namespace: "window_surfaces"
+  description: "Run power mode hardware transitions asynchronously"
+  bug: "339477240"
+  metadata {
+    purpose: PURPOSE_FEATURE
+  }
+} # set_power_mode_async
+
+flag {
+  name: "shader_disk_cache"
+  namespace: "core_graphics"
+  description: "Enable shader disk cache for RenderEngine"
+  bug: "428980914"
+} # shader_disk_cache
+
+flag {
+  name: "small_blur_region_improvements"
+  namespace: "core_graphics"
+  description: "Flag for some small blur region improvements"
+  bug: "475706309"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+} # small_blur_region_improvements
 
 flag {
   name: "skip_invisible_windows_in_input"
@@ -238,13 +521,13 @@ flag {
   }
  } # skip_invisible_windows_in_input
 
+
 flag {
-  name: "stable_edid_ids"
+  name: "synced_resolution_switch"
   namespace: "core_graphics"
-  description: "Guard use of the new stable EDID-based display IDs system."
-  bug: "352320847"
-  is_fixed_read_only: true
-} # stable_edid_ids
+  description: "Synchronize resolution modeset with framebuffer resizing"
+  bug: "355427258"
+} # synced_resolution_switch
 
 flag {
   name: "true_hdr_screenshots"
@@ -254,52 +537,78 @@ flag {
   is_fixed_read_only: true
 } # true_hdr_screenshots
 
- flag {
-  name: "override_trusted_overlay"
+flag {
+    name: "use_content_priority_for_jank_classification"
+    namespace: "core_graphics"
+    description: "Use content priority for jank classification"
+    bug: "423713756"
+} # use_content_priority_for_jank_classification
+
+flag {
+    name: "use_experimental_jank_classification"
+    namespace: "core_graphics"
+    description: "Use experimental jank classification"
+    bug: "416904263"
+} # use_experimental_jank_classification
+
+flag {
+    name: "use_last_vsync_predict"
+    namespace: "core_graphics"
+    description: "Use the latest VSYNC timestamp for prediction on ARR devices with stable VSYNC signals."
+    bug: "362803698"
+} # use_last_vsync_predict
+
+flag {
+  name: "vd_aware_scheduler"
+  namespace: "core_graphics"
+  description: "Extend scheduler with support for virtual displays"
+  bug: "480207885"
+} # vd_aware_scheduler
+
+flag {
+    name: "virtual_display_content_filtering"
+    namespace: "window_surfaces"
+    description: "Secure apps from unauthorized content capture"
+    bug: "293903721"
+} # virtual_display_content_filtering
+
+flag {
+  name: "recompute_vsync_before_dispatch"
+  namespace: "core_graphics"
+  description: "Ensures target frame times are adjusted to the latest hardware model before dispatching to clients."
+  bug: "505477303"
+} # recompute_vsync_before_dispatch
+
+flag {
+  name: "wb_framebuffersurface2"
+  namespace: "core_graphics"
+  description: "When enabled, use an updated FrameBufferSurface instead of the legacy one"
+  bug: "340933138"
+} # wb_framebuffersurface2
+
+flag {
+  name: "wb_virtualdisplay2"
+  namespace: "core_graphics"
+  description: "When enabled, use VirtualDisplaySurface2 instead of the legacy one"
+  bug: "340933138"
+} # wb_virtualdisplay2
+
+flag {
+  name: "window_blur_kawase2_preallocate_buffers"
+  namespace: "core_graphics"
+  description: "Flag for preallocating buffers for kawase2 window blur"
+  bug: "445059696"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+} # window_blur_kawase2_preallocate_buffers
+
+flag {
+  name: "workload_hints_disabled"
   namespace: "window_surfaces"
-  description: "Allow child to disable trusted overlay set by a parent layer"
-  bug: "339701674"
-  is_fixed_read_only: true
-  metadata {
-    purpose: PURPOSE_BUGFIX
-  }
-} # override_trusted_overlay
-
-flag {
-  name: "view_set_requested_frame_rate_mrr"
-  namespace: "core_graphics"
-  description: "Enable to use frame rate category NoPreference with fixed frame rate vote on MRR devices"
-  bug: "352206100"
-  is_fixed_read_only: true
-} # view_set_requested_frame_rate_mrr
-
-flag {
-  name: "vrr_bugfix_24q4"
-  namespace: "core_graphics"
-  description: "bug fixes for VRR"
-  bug: "331513837"
-  is_fixed_read_only: true
-  metadata {
-    purpose: PURPOSE_BUGFIX
-  }
-} # vrr_bugfix_24q4
-
-flag {
-  name: "vrr_bugfix_dropped_frame"
-  namespace: "core_graphics"
-  description: "bug fix for VRR dropped frame"
-  bug: "343603085"
-  is_fixed_read_only: true
-  metadata {
-    purpose: PURPOSE_BUGFIX
-  }
-} # vrr_bugfix_dropped_frame
-
-flag {
-  name: "window_blur_kawase2"
-  namespace: "core_graphics"
-  description: "Flag for using Kawase2 algorithm for window blur"
-  bug: "353826438"
-} # window_blur_kawase2
+  description: "Disabled load hints based on SF workload"
+  bug: "492168830"
+} # workload_hints_disabled
 
 # IMPORTANT - please keep alphabetize to reduce merge conflicts
+
