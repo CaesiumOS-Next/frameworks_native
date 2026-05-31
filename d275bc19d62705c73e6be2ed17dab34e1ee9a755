@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e3582766_38a5ab94",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 4790607
+      },
+      "writtenOn": "2026-05-31T14:33:49Z",
+      "side": 1,
+      "message": "Hello! Could you ptal at this when you have time?",
+      "revId": "d275bc19d62705c73e6be2ed17dab34e1ee9a755",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    }
+  ]
+}
