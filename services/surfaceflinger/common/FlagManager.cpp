@@ -101,7 +101,7 @@ void FlagManager::dumpFlag(std::string& result, bool aconfig, const char* name,
 
 void FlagManager::dump(std::string& result) const {
 #define DUMP_FLAG_INTERNAL(name, aconfig) \
-    dumpFlag(result, (aconfig), #name, std::bind(&FlagManager::name, this))
+    dumpFlag(result, (aconfig), #name, [this] { return name(); })
 #define DUMP_LEGACY_SERVER_FLAG(name) DUMP_FLAG_INTERNAL(name, false)
 #define DUMP_ACONFIG_FLAG(name) DUMP_FLAG_INTERNAL(name, true)
 

@@ -476,8 +476,9 @@ private:
 
     template <typename F, std::enable_if_t<!std::is_member_function_pointer_v<F>>* = nullptr>
     static Dumper dumper(F&& dump) {
-        using namespace std::placeholders;
-        return std::bind(std::forward<F>(dump), _3);
+        return [dump = std::forward<F>(dump)](const DumpArgs&, bool, std::string& result) mutable {
+            return dump(result);
+        };
     }
 
     Dumper lockedDumper(Dumper dump) {
@@ -493,20 +494,23 @@ private:
 
     template <typename F, std::enable_if_t<std::is_member_function_pointer_v<F>>* = nullptr>
     Dumper dumper(F dump) {
-        using namespace std::placeholders;
-        return lockedDumper(std::bind(dump, this, _3));
+        return lockedDumper([this, dump](const DumpArgs&, bool, std::string& result) {
+            return (this->*dump)(result);
+        });
     }
 
     template <typename F>
     Dumper argsDumper(F dump) {
-        using namespace std::placeholders;
-        return lockedDumper(std::bind(dump, this, _1, _3));
+        return lockedDumper([this, dump](const DumpArgs& args, bool, std::string& result) {
+            return (this->*dump)(args, result);
+        });
     }
 
     template <typename F>
     Dumper protoDumper(F dump) {
-        using namespace std::placeholders;
-        return lockedDumper(std::bind(dump, this, _1, _2, _3));
+        return lockedDumper([this, dump](const DumpArgs& args, bool asProto, std::string& result) {
+            return (this->*dump)(args, asProto, result);
+        });
     }
 
     Dumper mainThreadDumperImpl(Dumper dumper) {
@@ -521,14 +525,16 @@ private:
 
     template <typename F, std::enable_if_t<std::is_member_function_pointer_v<F>>* = nullptr>
     Dumper mainThreadDumper(F dump) {
-        using namespace std::placeholders;
-        return mainThreadDumperImpl(std::bind(dump, this, _3));
+        return mainThreadDumperImpl([this, dump](const DumpArgs&, bool, std::string& result) {
+            return (this->*dump)(result);
+        });
     }
 
     template <typename F, std::enable_if_t<std::is_member_function_pointer_v<F>>* = nullptr>
     Dumper argsMainThreadDumper(F dump) {
-        using namespace std::placeholders;
-        return mainThreadDumperImpl(std::bind(dump, this, _1, _3));
+        return mainThreadDumperImpl([this, dump](const DumpArgs& args, bool, std::string& result) {
+            return (this->*dump)(args, result);
+        });
     }
 
     // Maximum allowed number of display frames that can be set through backdoor
