@@ -4707,9 +4707,9 @@ TransactionHandler::TransactionReadiness SurfaceFlinger::transactionReadyBufferC
 
 void SurfaceFlinger::addTransactionReadyFilters() {
     mTransactionHandler.addTransactionReadyFilter(
-            std::bind(&SurfaceFlinger::transactionReadyTimelineCheck, this, std::placeholders::_1));
+            [this](const auto& flushState) { transactionReadyTimelineCheck(flushState); });
     mTransactionHandler.addTransactionReadyFilter(
-            std::bind(&SurfaceFlinger::transactionReadyBufferCheck, this, std::placeholders::_1));
+            [this](const auto& flushState) { transactionReadyBufferCheck(flushState); });
 }
 
 // For tests only
