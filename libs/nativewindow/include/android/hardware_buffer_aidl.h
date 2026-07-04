@@ -95,7 +95,7 @@ public:
 
     binder_status_t readFromParcel(const AParcel* _Nonnull parcel) {
         reset();
-        if (__builtin_available(android __ANDROID_API_U__, *)) {
+        if (__builtin_available(android 34, *)) {
             return AHardwareBuffer_readFromParcel(parcel, &mBuffer);
         } else {
             return STATUS_FAILED_TRANSACTION;
@@ -106,7 +106,7 @@ public:
         if (!mBuffer) {
             return STATUS_BAD_VALUE;
         }
-        if (__builtin_available(android __ANDROID_API_U__, *)) {
+        if (__builtin_available(android 34, *)) {
             return AHardwareBuffer_writeToParcel(mBuffer, parcel);
         } else {
             return STATUS_FAILED_TRANSACTION;
@@ -158,7 +158,7 @@ public:
         if (!mBuffer) {
             return "<HardwareBuffer: Invalid>";
         }
-        if (__builtin_available(android __ANDROID_API_S__, *)) {
+        if (__builtin_available(android 31, *)) {
             uint64_t id = 0;
             AHardwareBuffer_getId(mBuffer, &id);
             return "<HardwareBuffer " + std::to_string(id) + ">";

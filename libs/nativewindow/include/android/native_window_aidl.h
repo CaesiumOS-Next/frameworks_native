@@ -57,7 +57,8 @@ __BEGIN_DECLS
  *         STATUS_NO_MEMORY if an allocation fails
  */
 binder_status_t ANativeWindow_readFromParcel(const AParcel* _Nonnull parcel,
-        ANativeWindow* _Nullable* _Nonnull outWindow) __INTRODUCED_IN(__ANDROID_API_U__);
+                                             ANativeWindow* _Nullable* _Nonnull outWindow)
+        __INTRODUCED_IN(34);
 
 /**
  * Write an ANativeWindow to an AParcel.
@@ -72,7 +73,7 @@ binder_status_t ANativeWindow_readFromParcel(const AParcel* _Nonnull parcel,
  *         STATUS_FDS_NOT_ALLOWED if the parcel does not allow storing FDs
  */
 binder_status_t ANativeWindow_writeToParcel(ANativeWindow* _Nonnull window,
-        AParcel* _Nonnull parcel) __INTRODUCED_IN(__ANDROID_API_U__);
+                                            AParcel* _Nonnull parcel) __INTRODUCED_IN(34);
 
 __END_DECLS
 
@@ -103,7 +104,7 @@ public:
 
     binder_status_t readFromParcel(const AParcel* _Nonnull parcel) {
         reset();
-        if (__builtin_available(android __ANDROID_API_U__, *)) {
+        if (__builtin_available(android 34, *)) {
             return ANativeWindow_readFromParcel(parcel, &mWindow);
         } else {
             return STATUS_INVALID_OPERATION;
@@ -114,7 +115,7 @@ public:
         if (!mWindow) {
             return STATUS_BAD_VALUE;
         }
-        if (__builtin_available(android __ANDROID_API_U__, *)) {
+        if (__builtin_available(android 34, *)) {
             return ANativeWindow_writeToParcel(mWindow, parcel);
         } else {
             return STATUS_INVALID_OPERATION;
