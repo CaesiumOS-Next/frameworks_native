@@ -24,6 +24,30 @@
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     },
     {
+      "unresolved": true,
+      "key": {
+        "uuid": "fe3a82c2_f3e64a9d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1339259
+      },
+      "writtenOn": "2026-07-06T18:51:21Z",
+      "side": 1,
+      "message": "yes, I was referring to the standard headers in the NDK toolchains. The older toolchain doesn\u0027t package newer macro definitions.\n\n\u003e The compilation failure here is because only some of the headers were updated, which is just not a valid configuration?\n\nIt\u0027s pretty normal for out-of-tree drivers to package a single version of the headers for cross-compilation purposes, but there exist integrators willing to compile the latest driver code with older toolchain and deploy on older Android OS (their build environment doesn\u0027t have the newer toolchain updated). So it\u0027s better to avoid things only existed in newer NDK toolchain (otherwise would weaken the `__INTRODUCED_IN` functionality).",
+      "parentUuid": "66c89929_feba9997",
+      "range": {
+        "startLine": 10,
+        "startChar": 36,
+        "endLine": 14,
+        "endChar": 11
+      },
+      "revId": "797235f515a5210146da7914294175541b20d135",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
       "unresolved": false,
       "key": {
         "uuid": "cd74f469_ecd7d101",
