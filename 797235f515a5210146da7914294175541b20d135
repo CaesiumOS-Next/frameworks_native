@@ -63,6 +63,24 @@
       "message": "aosp is read-only -- can you move this into internal?",
       "revId": "797235f515a5210146da7914294175541b20d135",
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "8eff95dd_c0acb3cd",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1339259
+      },
+      "writtenOn": "2026-07-06T18:53:06Z",
+      "side": 1,
+      "message": "will do. Curious how folks outside are able to sync the updated headers?",
+      "parentUuid": "cd74f469_ecd7d101",
+      "revId": "797235f515a5210146da7914294175541b20d135",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     }
   ]
 }
