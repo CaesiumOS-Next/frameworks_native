@@ -72,6 +72,30 @@
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     },
     {
+      "unresolved": true,
+      "key": {
+        "uuid": "bf04ec5e_84495a54",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1339259
+      },
+      "writtenOn": "2026-07-06T19:57:24Z",
+      "side": 1,
+      "message": "\u003e The problem is they have a new hardware_buffer(_aidl).h but not a new android/api-level.h.\n\nUsually the former has to be vendored manually into the driver tree, and the use of anything inside those headers are gated behind api levels in the driver.\n\nThe latter is provided by the NDK toolchain sysroot, and is backward compatible so one can target some older SDK version with latest toolchain.\n\nThe reporter\u0027s env only has an obsolete NDK toolchain. While asking the reporter to update the toolchain, we tend to do little compatibility patches to not disrupt users\u0027 existing env if that seem to be _reasonable_ ; )\n\n\u003e ...It does not enable mixed headers.\n\nTotally agreed now!\n\n\u003e So while this isn\u0027t objectionable itself, it\u0027s only a bandaid at best. This same issue will crop up again if hardware_buffer(_aid).h ever depend on any other NDK type in the set of headers they aren\u0027t updating.\n\nMakes sense to me. It\u0027s better for the reporter to download the newer ndk toolchain given that\u0027s publicly available.",
+      "parentUuid": "2fd804ef_0d984131",
+      "range": {
+        "startLine": 10,
+        "startChar": 36,
+        "endLine": 14,
+        "endChar": 11
+      },
+      "revId": "797235f515a5210146da7914294175541b20d135",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
       "unresolved": false,
       "key": {
         "uuid": "cd74f469_ecd7d101",
