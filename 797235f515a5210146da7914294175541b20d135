@@ -48,6 +48,30 @@
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     },
     {
+      "unresolved": true,
+      "key": {
+        "uuid": "2fd804ef_0d984131",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1010103
+      },
+      "writtenOn": "2026-07-06T19:43:07Z",
+      "side": 1,
+      "message": "\u003e  So it\u0027s better to avoid things only existed in newer NDK toolchain (otherwise would weaken the __INTRODUCED_IN functionality).\n\nThe toolchain isn\u0027t the problem here. The problem is they have a new hardware_buffer(_aidl).h but not a new android/api-level.h. Meaning they do not have any single version of the toolchain or even system headers. They have a mix of two different versions of headers, which isn\u0027t valid and never has been?\n\nThis is not what `__INTRODUCED_IN` is for. `__INTRODUCED_IN` is to aid in backwards compatibility of the resulting binary, avoiding manual dlsym/dlopen. It does not enable mixed headers.\n\nSo while this isn\u0027t objectionable itself, it\u0027s only a bandaid at best. This same issue will crop up again if hardware_buffer(_aid).h ever depend on any other NDK type in the set of headers they aren\u0027t updating.",
+      "parentUuid": "fe3a82c2_f3e64a9d",
+      "range": {
+        "startLine": 10,
+        "startChar": 36,
+        "endLine": 14,
+        "endChar": 11
+      },
+      "revId": "797235f515a5210146da7914294175541b20d135",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
       "unresolved": false,
       "key": {
         "uuid": "cd74f469_ecd7d101",
