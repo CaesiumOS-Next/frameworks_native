@@ -1,6 +1,29 @@
 {
   "comments": [
     {
+      "unresolved": true,
+      "key": {
+        "uuid": "66c89929_feba9997",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1010103
+      },
+      "writtenOn": "2026-07-06T17:55:22Z",
+      "side": 1,
+      "message": "If it actually had the latest VNDK headers then there wouldn\u0027t be a compilation failure. The compilation failure here is because only *some* of the headers were updated, which is just not a valid configuration?\n\nAlso VNDK is deprecated (https://source.android.com/docs/core/architecture/vndk#vndk-deprecation), did you mean LLNDK here?",
+      "range": {
+        "startLine": 10,
+        "startChar": 36,
+        "endLine": 14,
+        "endChar": 11
+      },
+      "revId": "797235f515a5210146da7914294175541b20d135",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
       "unresolved": false,
       "key": {
         "uuid": "cd74f469_ecd7d101",
