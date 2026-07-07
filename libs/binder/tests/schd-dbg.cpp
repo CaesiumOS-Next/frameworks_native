@@ -99,6 +99,7 @@ void thread_dump(const char* prefix) {
 class BinderWorkerService : public BBinder {
  public:
   BinderWorkerService() {
+    setInheritRt(true);
   }
   ~BinderWorkerService() {
   }
