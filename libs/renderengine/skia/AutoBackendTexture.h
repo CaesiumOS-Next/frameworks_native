@@ -105,6 +105,8 @@ public:
 
         SkColorType colorType() const { return mTexture->mBackendTexture->internalColorType(); }
 
+        bool isOutputBuffer() const { return mTexture->mBackendTexture->isOutputBuffer(); }
+
         DISALLOW_COPY_AND_ASSIGN(LocalRef);
 
     private:

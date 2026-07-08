@@ -499,7 +499,11 @@ std::shared_ptr<AutoBackendTexture::LocalRef> SkiaRenderEngine::getOrCreateBacke
     // Do not lookup the buffer in the cache for protected contexts
     if (!isProtected()) {
         if (const auto& it = mTextureCache.find(buffer->getId()); it != mTextureCache.end()) {
-            return it->second;
+            if (isOutputBuffer && !it->second->isOutputBuffer()) {
+                mTextureCache.erase(it);
+            } else {
+                return it->second;
+            }
         }
     }
     std::unique_ptr<SkiaBackendTexture> backendTexture =
@@ -747,6 +751,11 @@ void SkiaRenderEngine::drawLayersInternal(
     waitFence(context, bufferFence);
 
     sk_sp<SkSurface> dstSurface = surfaceTextureRef->getOrCreateSurface(display.outputDataspace);
+    if (dstSurface == nullptr) {
+        ALOGE("Failed to get or create SkSurface for output buffer.");
+        resultPromise->set_value(base::unexpected(BAD_VALUE));
+        return;
+    }
 
     SkCanvas* dstCanvas = mCapture->tryCapture(dstSurface.get());
     if (dstCanvas == nullptr) {
@@ -1223,6 +1232,11 @@ void SkiaRenderEngine::drawGainmapInternal(
     auto surfaceTextureRef = getOrCreateBackendTexture(gainmap->getBuffer(), true);
     sk_sp<SkSurface> dstSurface =
             surfaceTextureRef->getOrCreateSurface(ui::Dataspace::V0_SRGB_LINEAR);
+    if (dstSurface == nullptr) {
+        ALOGE("Failed to get or create SkSurface for output buffer.");
+        resultPromise->set_value(base::unexpected(BAD_VALUE));
+        return;
+    }
 
     waitFence(context, sdrFence);
     const auto sdrTextureRef = getOrCreateBackendTexture(sdr->getBuffer(), false);

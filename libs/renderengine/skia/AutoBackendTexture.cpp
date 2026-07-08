@@ -76,8 +76,10 @@ sk_sp<SkImage> AutoBackendTexture::makeImage(ui::Dataspace dataspace, SkAlphaTyp
 
 sk_sp<SkSurface> AutoBackendTexture::getOrCreateSurface(ui::Dataspace dataspace) {
     SFTRACE_CALL();
-    LOG_ALWAYS_FATAL_IF(!mBackendTexture->isOutputBuffer(),
-                        "You can't generate an SkSurface for a read-only texture");
+    if (!mBackendTexture->isOutputBuffer()) {
+        ALOGE("You can't generate an SkSurface for a read-only texture");
+        return nullptr;
+    }
     if (!mSurface.get() || mDataspace != dataspace) {
         sk_sp<SkSurface> surface =
                 mBackendTexture->makeSurface(dataspace, releaseSurfaceProc, this);
