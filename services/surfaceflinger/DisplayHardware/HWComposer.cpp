@@ -1314,6 +1314,19 @@ std::optional<display::DisplayIdentificationInfo> HWComposer::onHotplugConnect(
                 info->deviceProductInfo = std::move(newInfo->deviceProductInfo);
                 info->preferredDetailedTimingDescriptor =
                         std::move(newInfo->preferredDetailedTimingDescriptor);
+                // The physical size is normally only cached once, on the first-ever
+                // connect of this displayId (see allocatePhysicalDisplay below). On a
+                // reconnect the sink may have changed (e.g. EDID swapped on the same
+                // port), so refresh the cached size here too, or a stale size lingers
+                // for the lifetime of this displayId and can corrupt dpi estimation
+                // in getEstimatedDotsPerInchFromSize/correctedDpiIfneeded.
+                if (const auto it = mDisplayData.find(*displayId); it != mDisplayData.end()) {
+                    const std::optional<ui::Size> size = info->preferredDetailedTimingDescriptor
+                            ? std::make_optional(
+                                      info->preferredDetailedTimingDescriptor->physicalSizeInMm)
+                            : std::nullopt;
+                    it->second.hwcDisplay->setPhysicalSizeInMm(size);
+                }
             } else {
                 ALOGE("Failed to parse identification data for display %" PRIu64, hwcDisplayId);
             }
