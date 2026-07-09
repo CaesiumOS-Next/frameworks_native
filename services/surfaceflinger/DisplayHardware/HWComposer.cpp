@@ -1314,6 +1314,15 @@ std::optional<display::DisplayIdentificationInfo> HWComposer::onHotplugConnect(
                 info->deviceProductInfo = std::move(newInfo->deviceProductInfo);
                 info->preferredDetailedTimingDescriptor =
                         std::move(newInfo->preferredDetailedTimingDescriptor);
+                // Reconnect invalidates EDID-derived data, which
+                // getEstimatedDotsPerInchFromSize depends on.
+                if (const auto it = mDisplayData.find(*displayId); it != mDisplayData.end()) {
+                    const std::optional<ui::Size> size = info->preferredDetailedTimingDescriptor
+                            ? std::make_optional(
+                                      info->preferredDetailedTimingDescriptor->physicalSizeInMm)
+                            : std::nullopt;
+                    it->second.hwcDisplay->setPhysicalSizeInMm(size);
+                }
             } else {
                 ALOGE("Failed to parse identification data for display %" PRIu64, hwcDisplayId);
             }
@@ -1376,10 +1385,9 @@ std::optional<display::DisplayIdentificationInfo> HWComposer::onHotplugConnect(
     }
 
     if (!isConnected(info->id)) {
-        std::optional<ui::Size> size = std::nullopt;
-        if (info->preferredDetailedTimingDescriptor) {
-            size = info->preferredDetailedTimingDescriptor->physicalSizeInMm;
-        }
+        const std::optional<ui::Size> size = info->preferredDetailedTimingDescriptor
+                ? std::make_optional(info->preferredDetailedTimingDescriptor->physicalSizeInMm)
+                : std::nullopt;
         allocatePhysicalDisplay(hwcDisplayId, info->id, info->port, size);
     }
     return info;
