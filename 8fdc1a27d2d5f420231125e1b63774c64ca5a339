@@ -16,6 +16,24 @@
       "message": "Hi! Before I add code owners to the review, could you please give me your first-glance opinion about this change?",
       "revId": "8fdc1a27d2d5f420231125e1b63774c64ca5a339",
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "4135eab2_4be42479",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 3490802
+      },
+      "writtenOn": "2026-07-10T23:00:45Z",
+      "side": 1,
+      "message": "I\u0027ll defer to @berlu@google.com, as he implemented this piece of logic.\n\nI\u0027d suggest @domlaskowski@google.com as the owner of the reconnect path when you\u0027re ready.",
+      "parentUuid": "e08f8d0e_464a4dc0",
+      "revId": "8fdc1a27d2d5f420231125e1b63774c64ca5a339",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     }
   ]
 }
