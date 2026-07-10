@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e08f8d0e_464a4dc0",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1097570
+      },
+      "writtenOn": "2026-07-10T18:04:26Z",
+      "side": 1,
+      "message": "Hi! Before I add code owners to the review, could you please give me your first-glance opinion about this change?",
+      "revId": "8fdc1a27d2d5f420231125e1b63774c64ca5a339",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    }
+  ]
+}
