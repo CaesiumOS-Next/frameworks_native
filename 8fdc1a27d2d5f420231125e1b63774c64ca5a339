@@ -51,6 +51,134 @@
       "message": "I don\u0027t really have an issue with reparsing the physical size, but in theory the replug is a replug of same display, which makes it odd that the physical size of the display would change, if that\u0027s the case I\u0027d almost expect the ID to change.",
       "revId": "8fdc1a27d2d5f420231125e1b63774c64ca5a339",
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "66ec2186_7ba84bfd",
+        "filename": "services/surfaceflinger/DisplayHardware/HWC2.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1099928
+      },
+      "writtenOn": "2026-07-13T16:16:23Z",
+      "side": 1,
+      "message": "Please make it consistent with the other methods, i.e. abstract with a `MOCK_METHOD`.",
+      "range": {
+        "startLine": 110,
+        "startChar": 0,
+        "endLine": 111,
+        "endChar": 80
+      },
+      "revId": "8fdc1a27d2d5f420231125e1b63774c64ca5a339",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6c66036b_fb794aa6",
+        "filename": "services/surfaceflinger/DisplayHardware/HWComposer.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 1322,
+      "author": {
+        "id": 1099928
+      },
+      "writtenOn": "2026-07-13T16:16:23Z",
+      "side": 1,
+      "message": "Nit: Shorten this comment. The important part is that reconnect invalidates EDID-derived data, which `getEstimatedDotsPerInchFromSize` depends on.",
+      "range": {
+        "startLine": 1317,
+        "startChar": 0,
+        "endLine": 1322,
+        "endChar": 75
+      },
+      "fixSuggestions": [
+        {
+          "fixId": "031cc893_8582641d",
+          "description": "prompt_to_edit API",
+          "replacements": [
+            {
+              "path": "services/surfaceflinger/DisplayHardware/HWComposer.cpp",
+              "range": {
+                "startLine": 1317,
+                "startChar": 0,
+                "endLine": 1323,
+                "endChar": 0
+              },
+              "replacement": "                // The physical size is normally cached on first connect. On reconnect, the EDID\n                // may have changed, invalidating the cached size which getEstimatedDotsPerInchFromSize\n                // depends on.\n"
+            }
+          ]
+        }
+      ],
+      "revId": "8fdc1a27d2d5f420231125e1b63774c64ca5a339",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ad2928bb_e183dc05",
+        "filename": "services/surfaceflinger/DisplayHardware/HWComposer.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 1327,
+      "author": {
+        "id": 1099928
+      },
+      "writtenOn": "2026-07-13T16:16:23Z",
+      "side": 1,
+      "message": "Use `std::optional\u003cT\u003e::transform`.",
+      "range": {
+        "startLine": 1324,
+        "startChar": 0,
+        "endLine": 1327,
+        "endChar": 43
+      },
+      "fixSuggestions": [
+        {
+          "fixId": "98284d76_aba88edf",
+          "description": "prompt_to_edit API",
+          "replacements": [
+            {
+              "path": "services/surfaceflinger/DisplayHardware/HWComposer.cpp",
+              "range": {
+                "startLine": 1324,
+                "startChar": 0,
+                "endLine": 1328,
+                "endChar": 0
+              },
+              "replacement": "                    const std::optional\u003cui::Size\u003e size \u003d\n                            info-\u003epreferredDetailedTimingDescriptor.transform(\n                                    [](const auto\u0026 desc) { return desc.physicalSizeInMm; });\n"
+            }
+          ]
+        }
+      ],
+      "revId": "8fdc1a27d2d5f420231125e1b63774c64ca5a339",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d88621bb_61d65672",
+        "filename": "services/surfaceflinger/DisplayHardware/HWComposer.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 1395,
+      "author": {
+        "id": 1099928
+      },
+      "writtenOn": "2026-07-13T16:16:23Z",
+      "side": 1,
+      "message": "Mind doing the same change here so `size` is `const`?",
+      "range": {
+        "startLine": 1392,
+        "startChar": 0,
+        "endLine": 1395,
+        "endChar": 9
+      },
+      "revId": "8fdc1a27d2d5f420231125e1b63774c64ca5a339",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     }
   ]
 }
