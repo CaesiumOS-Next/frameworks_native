@@ -34,6 +34,23 @@
       "parentUuid": "e08f8d0e_464a4dc0",
       "revId": "8fdc1a27d2d5f420231125e1b63774c64ca5a339",
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "de1e24a5_e804d0fa",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 3626654
+      },
+      "writtenOn": "2026-07-13T13:08:38Z",
+      "side": 1,
+      "message": "I don\u0027t really have an issue with reparsing the physical size, but in theory the replug is a replug of same display, which makes it odd that the physical size of the display would change, if that\u0027s the case I\u0027d almost expect the ID to change.",
+      "revId": "8fdc1a27d2d5f420231125e1b63774c64ca5a339",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     }
   ]
 }
