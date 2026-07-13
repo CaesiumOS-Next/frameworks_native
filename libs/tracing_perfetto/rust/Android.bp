@@ -1,0 +1,60 @@
+// Copyright 2026 The Android Open Source Project
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// Inherits default_applicable_licenses from the frameworks_native_license
+// package declaration further up the tree.
+
+// Generate the C++ side of the cxx bridge declared in lib.rs.
+genrule {
+    name: "libtracing_perfetto_rust_bridge_code",
+    tools: ["cxxbridge"],
+    cmd: "$(location cxxbridge) $(in) >> $(out)",
+    srcs: ["lib.rs"],
+    out: ["tracing_perfetto_cxx_generated.cc"],
+}
+
+// Compile the generated bridge code against the headers exported by
+// libtracing_perfetto (which re-exports the libperfetto_c headers).
+cc_library_static {
+    name: "libtracing_perfetto_rust_bridge",
+    host_supported: true,
+    generated_headers: ["cxx-bridge-header"],
+    generated_sources: ["libtracing_perfetto_rust_bridge_code"],
+    shared_libs: ["libtracing_perfetto"],
+}
+
+rust_defaults {
+    name: "libtracing_perfetto_rust_defaults",
+    crate_name: "tracing_perfetto",
+    srcs: ["lib.rs"],
+    edition: "2021",
+    host_supported: true,
+    rustlibs: ["libcxx"],
+    static_libs: ["libtracing_perfetto_rust_bridge"],
+    shared_libs: ["libtracing_perfetto"],
+}
+
+rust_library {
+    name: "libtracing_perfetto_rust",
+    defaults: ["libtracing_perfetto_rust_defaults"],
+}
+
+rust_test {
+    name: "libtracing_perfetto_rust_test",
+    defaults: ["libtracing_perfetto_rust_defaults"],
+    test_options: {
+        unit_test: true,
+    },
+    test_suites: ["general-tests"],
+}
