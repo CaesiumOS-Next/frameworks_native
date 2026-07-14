@@ -163,6 +163,40 @@ pub fn trace_end(category: Category) {
     ffi::trace_end(category.bits());
 }
 
+/// A synchronous trace section that ends when it is dropped, so a scope's
+/// duration is traced without a manual [`trace_end`].
+///
+/// Because a [`trace_begin`]/[`trace_end`] pair must nest on one thread, keep
+/// the guard on the stack and let it drop at the end of the scope rather than
+/// moving it elsewhere. Mirrors `atrace::ScopedEvent`, but takes a `&CStr` so
+/// the name reaches the tracer without an allocation.
+///
+/// ```no_run
+/// use tracing_perfetto::{begin_scoped_event, Category};
+/// let _event = begin_scoped_event(Category::VIEW, c"onMeasure");
+/// // ... traced work ...
+/// // the section ends when `_event` drops.
+/// ```
+#[must_use = "the trace section ends as soon as the guard is dropped"]
+pub struct ScopedEvent {
+    category: Category,
+}
+
+impl Drop for ScopedEvent {
+    #[inline]
+    fn drop(&mut self) {
+        trace_end(self.category);
+    }
+}
+
+/// Begins a synchronous trace section named `name` and returns a guard that
+/// ends it on drop. See [`ScopedEvent`].
+#[inline]
+pub fn begin_scoped_event(category: Category, name: &CStr) -> ScopedEvent {
+    trace_begin(category, name);
+    ScopedEvent { category }
+}
+
 /// Begins an asynchronous trace section named `name`.
 ///
 /// Asynchronous sections do not nest and may end on a different thread. A section is
@@ -413,5 +447,17 @@ mod tests {
         register_with_perfetto(Backend::InProcess);
         register_with_perfetto(Backend::InProcess);
         trace_instant(Category::SYSTEM_SERVER, c"after-registration");
+    }
+
+    #[test]
+    fn scoped_event_traces_begin_and_end() {
+        // Without an active session these are no-ops in the tracer; the test
+        // pins that the guard begins on construction and ends on drop without
+        // panicking, and that dropping is what closes the section.
+        let outer = begin_scoped_event(Category::VIEW, c"outer");
+        {
+            let _inner = begin_scoped_event(Category::VIEW, c"inner");
+        }
+        drop(outer);
     }
 }
