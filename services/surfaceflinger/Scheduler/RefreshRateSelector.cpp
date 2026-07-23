@@ -1584,6 +1584,11 @@ FpsRange RefreshRateSelector::getSupportedFrameRateRangeLocked() const {
 auto RefreshRateSelector::getIdleTimerAction() const -> KernelIdleTimerAction {
     std::lock_guard lock(mLock);
 
+    if (base::GetIntProperty("debug.sf.set_idle_timer_ms", 0) == 0) {
+        // Ignore the refresh rate policy once the kernel idle timer is disabled.
+        return KernelIdleTimerAction::TurnOff;
+    }
+
     const Fps deviceMinFps = mMinRefreshRateModeIt->second->getPeakFps();
     const DisplayModePtr& minByPolicy = getMinRefreshRateByPolicyLocked();
 

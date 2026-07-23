@@ -258,6 +258,7 @@ void DisplayModeController::updateKernelIdleTimer(PhysicalDisplayId displayId) {
         case KernelIdleTimerAction::TurnOff:
             if (displayPtr->isKernelIdleTimerEnabled) {
                 SFTRACE_INT("KernelIdleTimer", 0);
+                ALOGD("%s: Turning off Kernel Idle Timer", displayPtr->concatId(__func__).c_str());
                 updateKernelIdleTimer(displayId, std::chrono::milliseconds::zero(), *controllerOpt);
                 displayPtr->isKernelIdleTimerEnabled = false;
             }
@@ -266,6 +267,9 @@ void DisplayModeController::updateKernelIdleTimer(PhysicalDisplayId displayId) {
             if (!displayPtr->isKernelIdleTimerEnabled) {
                 SFTRACE_INT("KernelIdleTimer", 1);
                 const auto timeout = displayPtr->selectorPtr->getIdleTimerTimeout();
+                ALOGD("%s: Turning on Kernel Idle Timer with timeout = %lld ms",
+                      displayPtr->concatId(__func__).c_str(),
+                      static_cast<long long>(timeout.count()));
                 updateKernelIdleTimer(displayId, timeout, *controllerOpt);
                 displayPtr->isKernelIdleTimerEnabled = true;
             }

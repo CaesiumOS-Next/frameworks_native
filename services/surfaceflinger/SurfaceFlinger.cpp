@@ -2643,6 +2643,9 @@ bool SurfaceFlinger::commit(PhysicalDisplayId pacesetterId,
         mTimeStats->incrementMissedFrames();
     }
 
+    // Update the kernel idle timer during run time.
+    mDisplayModeController.updateKernelIdleTimer(pacesetterId);
+
     // If a mode set is pending and the fence hasn't fired yet, wait for the next commit.
     if (std::any_of(frameTargets.begin(), frameTargets.end(),
                     [this](const auto& pair) FTL_FAKE_GUARD(kMainThreadContext) {
@@ -6952,24 +6955,20 @@ auto SurfaceFlinger::getKernelIdleTimerProperties(PhysicalDisplayId displayId)
     const bool isKernelIdleTimerHwcSupported = getHwComposer().getComposer()->isSupported(
             android::Hwc2::Composer::OptionalFeature::KernelIdleTimer);
     const auto timeout = getIdleTimerTimeout(displayId);
-    if (isKernelIdleTimerHwcSupported) {
-        if (getHwComposer().hasDisplayIdleTimerCapability(displayId)) {
-            // In order to decide if we can use the HWC api for idle timer
-            // we query DisplayCapability::DISPLAY_IDLE_TIMER directly on the composer
-            // without relying on hasDisplayCapability.
-            // hasDisplayCapability relies on DisplayCapabilities
-            // which are updated after we set the PowerMode::ON.
-            // DISPLAY_IDLE_TIMER is a display driver property
-            // and is available before the PowerMode::ON
-            return {KernelIdleTimerController::HwcApi, timeout};
-        }
+    if (isKernelIdleTimerHwcSupported && getHwComposer().hasDisplayIdleTimerCapability(displayId)) {
+        // In order to decide if we can use the HWC api for idle timer
+        // we query DisplayCapability::DISPLAY_IDLE_TIMER directly on the composer
+        // without relying on hasDisplayCapability.
+        // hasDisplayCapability relies on DisplayCapabilities
+        // which are updated after we set the PowerMode::ON.
+        // DISPLAY_IDLE_TIMER is a display driver property
+        // and is available before the PowerMode::ON
+        return {KernelIdleTimerController::HwcApi, timeout};
+    } else if (getKernelIdleTimerSyspropConfig(displayId)) {
+        return {KernelIdleTimerController::Sysprop, timeout};
+    } else {
         return {std::nullopt, timeout};
     }
-    if (getKernelIdleTimerSyspropConfig(displayId)) {
-        return {KernelIdleTimerController::Sysprop, timeout};
-    }
-
-    return {std::nullopt, timeout};
 }
 
 // A simple RAII class to disconnect from an ANativeWindow* when it goes out of scope
