@@ -182,6 +182,30 @@
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "36953140_aaa9f2ce",
+        "filename": "services/surfaceflinger/DisplayHardware/HWComposer.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 1322,
+      "author": {
+        "id": 1097570
+      },
+      "writtenOn": "2026-07-24T20:14:31Z",
+      "side": 1,
+      "message": "Acknowledged",
+      "parentUuid": "aa3a8eba_0de8f6b9",
+      "range": {
+        "startLine": 1317,
+        "startChar": 0,
+        "endLine": 1322,
+        "endChar": 75
+      },
+      "revId": "8fdc1a27d2d5f420231125e1b63774c64ca5a339",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "ad2928bb_e183dc05",
@@ -247,6 +271,30 @@
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "096db145_16f1cc3a",
+        "filename": "services/surfaceflinger/DisplayHardware/HWComposer.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 1327,
+      "author": {
+        "id": 1097570
+      },
+      "writtenOn": "2026-07-24T20:14:31Z",
+      "side": 1,
+      "message": "Ah sorry, I forgot to mention this in my update... I was trying to workaround a compiler error with the missing C++23 .transform(), but now I realized (I mean the AI realized) the ftl already had a wrapper for that.",
+      "parentUuid": "d806f424_dbd32fd0",
+      "range": {
+        "startLine": 1324,
+        "startChar": 0,
+        "endLine": 1327,
+        "endChar": 43
+      },
+      "revId": "8fdc1a27d2d5f420231125e1b63774c64ca5a339",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "d88621bb_61d65672",
@@ -284,6 +332,30 @@
       "side": 1,
       "message": "Ditto. I meant applying the `diff` above, replacing the ternary operator with `transform`.",
       "parentUuid": "d88621bb_61d65672",
+      "range": {
+        "startLine": 1392,
+        "startChar": 0,
+        "endLine": 1395,
+        "endChar": 9
+      },
+      "revId": "8fdc1a27d2d5f420231125e1b63774c64ca5a339",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "b4393af2_a1860be1",
+        "filename": "services/surfaceflinger/DisplayHardware/HWComposer.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 1395,
+      "author": {
+        "id": 1097570
+      },
+      "writtenOn": "2026-07-24T20:14:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c13d299f_b6ee4ec8",
       "range": {
         "startLine": 1392,
         "startChar": 0,
