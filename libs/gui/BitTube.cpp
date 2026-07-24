@@ -32,7 +32,7 @@ namespace gui {
 
 // Socket buffer size.  The default is typically about 128KB, which is much larger than we really
 // need. So we make it smaller.
-static const size_t DEFAULT_SOCKET_BUFFER_SIZE = 4 * 1024;
+static const size_t DEFAULT_SOCKET_BUFFER_SIZE = 64 * 1024;
 
 BitTube::BitTube(size_t bufsize) {
     init(bufsize, bufsize);
