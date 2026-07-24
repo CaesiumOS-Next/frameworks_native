@@ -93,6 +93,30 @@
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "b6657221_1a8842ed",
+        "filename": "services/surfaceflinger/DisplayHardware/HWC2.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1099928
+      },
+      "writtenOn": "2026-07-24T18:54:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "66ec2186_7ba84bfd",
+      "range": {
+        "startLine": 110,
+        "startChar": 0,
+        "endLine": 111,
+        "endChar": 80
+      },
+      "revId": "8fdc1a27d2d5f420231125e1b63774c64ca5a339",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "6c66036b_fb794aa6",
@@ -130,6 +154,30 @@
           ]
         }
       ],
+      "revId": "8fdc1a27d2d5f420231125e1b63774c64ca5a339",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "aa3a8eba_0de8f6b9",
+        "filename": "services/surfaceflinger/DisplayHardware/HWComposer.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 1322,
+      "author": {
+        "id": 1099928
+      },
+      "writtenOn": "2026-07-24T18:54:29Z",
+      "side": 1,
+      "message": "Could you paste the comment from the above AI-suggested `diff` instead? It\u0027s clearer than my terse wording.",
+      "parentUuid": "6c66036b_fb794aa6",
+      "range": {
+        "startLine": 1317,
+        "startChar": 0,
+        "endLine": 1322,
+        "endChar": 75
+      },
       "revId": "8fdc1a27d2d5f420231125e1b63774c64ca5a339",
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     },
@@ -177,6 +225,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "d806f424_dbd32fd0",
+        "filename": "services/surfaceflinger/DisplayHardware/HWComposer.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 1327,
+      "author": {
+        "id": 1099928
+      },
+      "writtenOn": "2026-07-24T18:54:29Z",
+      "side": 1,
+      "message": "Please apply the `diff` above.",
+      "parentUuid": "ad2928bb_e183dc05",
+      "range": {
+        "startLine": 1324,
+        "startChar": 0,
+        "endLine": 1327,
+        "endChar": 43
+      },
+      "revId": "8fdc1a27d2d5f420231125e1b63774c64ca5a339",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "d88621bb_61d65672",
         "filename": "services/surfaceflinger/DisplayHardware/HWComposer.cpp",
         "patchSetId": 1
@@ -188,6 +260,30 @@
       "writtenOn": "2026-07-13T16:16:23Z",
       "side": 1,
       "message": "Mind doing the same change here so `size` is `const`?",
+      "range": {
+        "startLine": 1392,
+        "startChar": 0,
+        "endLine": 1395,
+        "endChar": 9
+      },
+      "revId": "8fdc1a27d2d5f420231125e1b63774c64ca5a339",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c13d299f_b6ee4ec8",
+        "filename": "services/surfaceflinger/DisplayHardware/HWComposer.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 1395,
+      "author": {
+        "id": 1099928
+      },
+      "writtenOn": "2026-07-24T18:54:29Z",
+      "side": 1,
+      "message": "Ditto. I meant applying the `diff` above, replacing the ternary operator with `transform`.",
+      "parentUuid": "d88621bb_61d65672",
       "range": {
         "startLine": 1392,
         "startChar": 0,
