@@ -1,0 +1,9 @@
+package: "android.openxr.flags"
+container: "system"
+
+flag {
+    name: "openxr_loader_flag"
+    namespace: "xr"
+    description: "Flag for OpenXR loader features"
+    bug: "396166669"
+}

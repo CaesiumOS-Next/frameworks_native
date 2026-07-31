@@ -1,0 +1,68 @@
+LIBOPENXR { # introduced=38
+    global:
+        # Implements the OpenXR runtime interface, allowing legacy Android loaders to load and initialize OpenXR.
+        # https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#api-initialization-runtime-interface-negotiation
+        xrNegotiateLoaderRuntimeInterface;
+        xrInitializeLoaderKHR;
+
+        # OpenXR 1.0
+        xrCreateInstance;
+        xrDestroyInstance;
+        xrEnumerateApiLayerProperties;
+        xrEnumerateInstanceExtensionProperties;
+        xrGetInstanceProcAddr;
+        xrGetInstanceProperties;
+        xrPollEvent;
+        xrResultToString;
+        xrStructureTypeToString;
+        xrGetSystem;
+        xrGetSystemProperties;
+        xrEnumerateEnvironmentBlendModes;
+        xrCreateSession;
+        xrDestroySession;
+        xrEnumerateReferenceSpaces;
+        xrCreateReferenceSpace;
+        xrGetReferenceSpaceBoundsRect;
+        xrCreateActionSpace;
+        xrLocateSpace;
+        xrDestroySpace;
+        xrEnumerateViewConfigurations;
+        xrGetViewConfigurationProperties;
+        xrEnumerateViewConfigurationViews;
+        xrEnumerateSwapchainFormats;
+        xrCreateSwapchain;
+        xrDestroySwapchain;
+        xrEnumerateSwapchainImages;
+        xrAcquireSwapchainImage;
+        xrWaitSwapchainImage;
+        xrReleaseSwapchainImage;
+        xrBeginSession;
+        xrEndSession;
+        xrRequestExitSession;
+        xrWaitFrame;
+        xrBeginFrame;
+        xrEndFrame;
+        xrLocateViews;
+        xrStringToPath;
+        xrPathToString;
+        xrCreateActionSet;
+        xrDestroyActionSet;
+        xrCreateAction;
+        xrDestroyAction;
+        xrSuggestInteractionProfileBindings;
+        xrAttachSessionActionSets;
+        xrGetCurrentInteractionProfile;
+        xrGetActionStateBoolean;
+        xrGetActionStateFloat;
+        xrGetActionStateVector2f;
+        xrGetActionStatePose;
+        xrSyncActions;
+        xrEnumerateBoundSourcesForAction;
+        xrGetInputSourceLocalizedName;
+        xrApplyHapticFeedback;
+        xrStopHapticFeedback;
+        # OpenXR 1.1
+        xrLocateSpaces;
+    local:
+        *;
+};

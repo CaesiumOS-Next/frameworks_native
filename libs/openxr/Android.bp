@@ -1,0 +1,112 @@
+/*
+ * Copyright (C) 2026 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package {
+    default_applicable_licenses: ["frameworks_native_libs_openxr_license"],
+}
+
+license {
+    name: "frameworks_native_libs_openxr_license",
+    visibility: [":__subpackages__"],
+    license_kinds: [
+        "SPDX-license-identifier-Apache-2.0",
+    ],
+    license_text: [
+        "NOTICE",
+    ],
+}
+
+team {
+    name: "trendy_team_xr",
+    // go/trendy/manage/engineers/5004524353060864
+    trendy_team_id: "5004524353060864",
+}
+
+aconfig_declarations {
+    name: "android.openxr.flags-aconfig",
+    package: "android.openxr.flags",
+    container: "system",
+    srcs: ["openxr_flags.aconfig"],
+}
+
+cc_aconfig_library {
+    name: "android.openxr.flags-aconfig-cc",
+    aconfig_declarations: "android.openxr.flags-aconfig",
+}
+
+java_aconfig_library {
+    name: "android.openxr.flags-aconfig-java",
+    aconfig_declarations: "android.openxr.flags-aconfig",
+    defaults: ["framework-minus-apex-aconfig-java-defaults"],
+}
+
+java_aconfig_library {
+    name: "android.openxr.flags-aconfig-java-host",
+    aconfig_declarations: "android.openxr.flags-aconfig",
+    host_supported: true,
+    defaults: ["framework-minus-apex-aconfig-java-defaults"],
+}
+cc_library_shared {
+    name: "libopenxr",
+    cflags: [
+        "-DXR_OS_ANDROID",
+        "-DXR_USE_PLATFORM_ANDROID",
+    ],
+    cppflags: [
+        "-Wthread-safety",
+    ],
+    local_include_dirs: [
+        "src",
+        "src/common",
+    ],
+    srcs: [
+        "src/*.c",
+        "src/common/*.cpp",
+        "src/loader/*.cpp",
+    ],
+    header_libs: [
+        "jni_headers",
+        "openxr_headers",
+    ],
+    export_header_lib_headers: [
+        "openxr_headers",
+    ],
+    shared_libs: [
+        "libbase",
+        "libandroid",
+        "libcutils",
+        "liblog",
+        "libutils",
+        "libnativewindow",
+        "libdl",
+        "libdl_android",
+        "libjsoncpp",
+    ],
+}
+
+ndk_library {
+    name: "libopenxr",
+    symbol_file: "openxr.map.txt",
+    first_version: "38",
+}
+
+prebuilt_etc {
+    name: "openxr_active_runtime.json",
+    src: "active_runtime.json",
+    sub_dir: "openxr/1",
+    filename: "active_runtime.json",
+    no_full_install: true,
+}
