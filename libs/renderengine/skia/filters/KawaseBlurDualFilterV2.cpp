@@ -218,7 +218,9 @@ sk_sp<SkImage> KawaseBlurDualFilterV2::generateTemporaryImage(SkiaGpuContext* co
         const int newH =
                 std::max(1, static_cast<int>(static_cast<float>(targetBlurRect.height()) / scale));
         sk_sp<SkSurface> surface =
-                context->createRenderTarget(input->imageInfo().makeWH(newW, newH));
+                context->createRenderTarget(input->imageInfo()
+                                                     .makeColorType(kRGBA_F16_SkColorType)
+                                                     .makeWH(newW, newH));
         LOG_THREAD_STATE_AND_CRASH_IF(!surface, "%s: Failed to create surface for blurring!",
                                       __func__);
         return surface;
@@ -229,7 +231,7 @@ sk_sp<SkImage> KawaseBlurDualFilterV2::generateTemporaryImage(SkiaGpuContext* co
                 std::max(1, static_cast<int>(static_cast<float>(targetBlurRect.width()) / scale));
         const int newH =
                 std::max(1, static_cast<int>(static_cast<float>(targetBlurRect.height()) / scale));
-        return input->imageInfo().makeWH(newW, newH);
+        return input->imageInfo().makeColorType(kRGBA_F16_SkColorType).makeWH(newW, newH);
     };
 
     const bool isProtected = context->supportsProtectedContent();
@@ -346,11 +348,11 @@ void KawaseBlurDualFilterV2::preallocateBuffers(SkiaGpuContext* context, ui::Siz
         const int newW = std::max(1, static_cast<int>(static_cast<float>(side) / kScales[i]));
         const int newH = std::max(1, static_cast<int>(static_cast<float>(side) / kScales[i]));
 
-        sp<GraphicBuffer> buffer = sp<GraphicBuffer>::make(newW, newH, PIXEL_FORMAT_RGBA_8888, 1,
+        sp<GraphicBuffer> buffer = sp<GraphicBuffer>::make(newW, newH, PIXEL_FORMAT_RGBA_FP16, 1,
                                                            usageFlags, "KawaseBlurDualFilterV2");
         LOG_THREAD_STATE_AND_CRASH_IF(buffer->initCheck() != OK,
                                       "Failed to preallocate %s GraphicBuffer for intermediate "
-                                      "blur surface: %s. %s(i:%d, %dx%x, RGBA_8888, "
+                                      "blur surface: %s. %s(i:%d, %dx%x, RGBA_FP16, "
                                       "usage:0x%" PRIx64 ")",
                                       isProtected ? "protected" : "unprotected",
                                       statusToString(buffer->initCheck()).c_str(),
@@ -360,7 +362,7 @@ void KawaseBlurDualFilterV2::preallocateBuffers(SkiaGpuContext* context, ui::Siz
                 context->makeBackendTexture(buffer->toAHardwareBuffer(), true);
         texturesRef[i] = std::make_shared<AutoBackendTexture::LocalRef>(std::move(backendTexture),
                                                                         mTextureCleanupMgr);
-        totalBytes += newW * newH * bytesPerPixel(PIXEL_FORMAT_RGBA_8888);
+        totalBytes += newW * newH * bytesPerPixel(PIXEL_FORMAT_RGBA_FP16);
     }
     ALOGD("(Re)allocated %zu bytes of %s memory for intermediate blur surfaces (%dx%d display)",
           totalBytes, isProtected ? "protected" : "unprotected", size.width, size.height);
