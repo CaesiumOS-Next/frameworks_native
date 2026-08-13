@@ -19,6 +19,7 @@
 #include <private/gui/ParcelUtils.h>
 #include <utils/Log.h>
 #include <utils/Looper.h>
+#include <cinttypes>
 #include <cstdint>
 
 namespace android::gui {
@@ -48,10 +49,20 @@ status_t ParcelableVsyncEventData::readFromParcel(const Parcel* parcel) {
 
     uint32_t uintPreferredFrameTimelineIndex;
     SAFE_PARCEL(parcel->readUint32, &uintPreferredFrameTimelineIndex);
+    if (uintPreferredFrameTimelineIndex >= VsyncEventData::kFrameTimelinesCapacity) {
+        ALOGE("%s: preferredFrameTimelineIndex %" PRIu32 " out of bounds", __func__,
+              uintPreferredFrameTimelineIndex);
+        return BAD_VALUE;
+    }
     vsync.preferredFrameTimelineIndex = static_cast<size_t>(uintPreferredFrameTimelineIndex);
 
     uint32_t uintFrameTimelinesLength;
     SAFE_PARCEL(parcel->readUint32, &uintFrameTimelinesLength);
+    if (uintFrameTimelinesLength > VsyncEventData::kFrameTimelinesCapacity) {
+        ALOGE("%s: frameTimelinesLength %" PRIu32 " exceeds capacity", __func__,
+              uintFrameTimelinesLength);
+        return BAD_VALUE;
+    }
     vsync.frameTimelinesLength = static_cast<size_t>(uintFrameTimelinesLength);
 
     for (size_t i = 0; i < vsync.frameTimelinesLength; i++) {
