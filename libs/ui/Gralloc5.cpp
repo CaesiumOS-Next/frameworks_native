@@ -23,7 +23,10 @@
 #include <aidlcommonsupport/NativeHandle.h>
 #include <android/binder_manager.h>
 #include <android/hardware/graphics/mapper/utils/IMapperMetadataTypes.h>
+#include <android-base/properties.h>
+#include <android-base/strings.h>
 #include <binder/IPCThreadState.h>
+#include <dirent.h>
 #include <dlfcn.h>
 #include <ui/FatVector.h>
 #include <vndksupport/linker.h>
@@ -303,9 +306,52 @@ GraphicBufferAllocator::AllocationResult Gralloc5Allocator::allocate(
 }
 
 void Gralloc5Mapper::preload() {
-    // TODO(b/261858155): Implement. We can't bounce off of IAllocator for this because zygote can't
-    // use binder. So when an alternate strategy of retrieving the library prefix is available,
-    // use that here.
+    // Zygote cannot use Binder to query IAllocator before fork.
+    // Discover and preload the vendor mapper SP-HAL library (mapper.<suffix>.so)
+    // into the sphal linker namespace before fork to prevent post-fork linker CoW dirtying.
+
+    // 1. Check system property "ro.hardware.gralloc" if configured.
+    std::string prop = base::GetProperty("ro.hardware.gralloc", "");
+    if (!prop.empty()) {
+        std::string libName = "mapper." + prop + ".so";
+        if (android_load_sphal_library(libName.c_str(), RTLD_LOCAL | RTLD_NOW) != nullptr) {
+            return;
+        }
+    }
+
+    // 2. Scan standard SP-HAL library search directories for mapper.<suffix>.so.
+#if defined(__LP64__)
+    static constexpr const char* kSearchPaths[] = {
+            "/odm/lib64/hw/",
+            "/vendor/lib64/hw/",
+            "/odm/lib64/",
+            "/vendor/lib64/",
+            "/system/vendor/lib64/hw/",
+            "/system/vendor/lib64/",
+    };
+#else
+    static constexpr const char* kSearchPaths[] = {
+            "/odm/lib/hw/",
+            "/vendor/lib/hw/",
+            "/odm/lib/",
+            "/vendor/lib/",
+            "/system/vendor/lib/hw/",
+            "/system/vendor/lib/",
+    };
+#endif
+
+    for (const char* path : kSearchPaths) {
+        std::unique_ptr<DIR, decltype(&closedir)> dir(opendir(path), closedir);
+        if (!dir) continue;
+
+        struct dirent* dp;
+        while ((dp = readdir(dir.get())) != nullptr) {
+            std::string_view name(dp->d_name);
+            if (base::StartsWith(name, "mapper.") && base::EndsWith(name, ".so")) {
+                android_load_sphal_library(dp->d_name, RTLD_LOCAL | RTLD_NOW);
+            }
+        }
+    }
 }
 
 Gralloc5Mapper::Gralloc5Mapper() {
