@@ -1782,7 +1782,7 @@ binder::Status InstalldNativeService::restoreAppDataSnapshot(
     }
 
     // Finally, restore the SELinux label on the app data.
-    return restoreconAppData(volumeUuid, packageName, userId, storageFlags, appId, seInfo);
+    return restoreconAppDataLocked(volumeUuid, packageName, userId, storageFlags, appId, seInfo);
 }
 
 binder::Status InstalldNativeService::destroyAppDataSnapshot(
