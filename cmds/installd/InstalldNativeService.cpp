@@ -1188,6 +1188,12 @@ binder::Status InstalldNativeService::clearAppData(const std::optional<std::stri
     CHECK_ARGUMENT_PACKAGE_NAME(packageName);
     LOCK_PACKAGE_USER();
 
+    return clearAppDataLocked(uuid, packageName, userId, flags, ceDataInode);
+}
+
+binder::Status InstalldNativeService::clearAppDataLocked(const std::optional<std::string>& uuid,
+        const std::string& packageName, int32_t userId, int32_t flags, int64_t ceDataInode) {
+
     const char* uuid_ = uuid ? uuid->c_str() : nullptr;
     const char* pkgname = packageName.c_str();
 
@@ -1655,8 +1661,8 @@ binder::Status InstalldNativeService::snapshotAppData(const std::optional<std::s
     }
 
     // ce_data_inode is not needed when FLAG_CLEAR_CACHE_ONLY is set.
-    binder::Status clear_cache_result =
-            clearAppData(volumeUuid, packageName, userId, storageFlags | FLAG_CLEAR_CACHE_ONLY, 0);
+    binder::Status clear_cache_result = clearAppDataLocked(
+            volumeUuid, packageName, userId, storageFlags | FLAG_CLEAR_CACHE_ONLY, 0);
     if (!clear_cache_result.isOk()) {
         // It should be fine to continue snapshot if we for some reason failed
         // to clear cache.
@@ -1664,9 +1670,8 @@ binder::Status InstalldNativeService::snapshotAppData(const std::optional<std::s
     }
 
     // ce_data_inode is not needed when FLAG_CLEAR_CODE_CACHE_ONLY is set.
-    binder::Status clear_code_cache_result =
-            clearAppData(volumeUuid, packageName, userId, storageFlags | FLAG_CLEAR_CODE_CACHE_ONLY,
-                         0);
+    binder::Status clear_code_cache_result = clearAppDataLocked(
+            volumeUuid, packageName, userId, storageFlags | FLAG_CLEAR_CODE_CACHE_ONLY, 0);
     if (!clear_code_cache_result.isOk()) {
         // It should be fine to continue snapshot if we for some reason failed
         // to clear code_cache.
@@ -1749,7 +1754,7 @@ binder::Status InstalldNativeService::restoreAppDataSnapshot(
     // can only be called when user unlocks the phone, meaning that CE user data
     // is decrypted.
     binder::Status res =
-            clearAppData(volumeUuid, packageName, userId, storageFlags, 0 /* ceDataInode */);
+            clearAppDataLocked(volumeUuid, packageName, userId, storageFlags, 0 /* ceDataInode */);
     if (!res.isOk()) {
         return res;
     }
@@ -1782,7 +1787,7 @@ binder::Status InstalldNativeService::restoreAppDataSnapshot(
     }
 
     // Finally, restore the SELinux label on the app data.
-    return restoreconAppData(volumeUuid, packageName, userId, storageFlags, appId, seInfo);
+    return restoreconAppDataLocked(volumeUuid, packageName, userId, storageFlags, appId, seInfo);
 }
 
 binder::Status InstalldNativeService::destroyAppDataSnapshot(

@@ -236,6 +236,9 @@ private:
                                        int32_t flags, int32_t appId, int32_t previousAppId,
                                        const std::string& seInfo, int32_t targetSdkVersion,
                                        int64_t* ceDataInode, int64_t* deDataInode);
+    binder::Status clearAppDataLocked(const std::optional<std::string>& uuid,
+                                        const std::string& packageName, int32_t userId,
+                                        int32_t flags, int64_t ceDataInode);
     binder::Status restoreconAppDataLocked(const std::optional<std::string>& uuid,
                                            const std::string& packageName, int32_t userId,
                                            int32_t flags, int32_t appId, const std::string& seInfo);
