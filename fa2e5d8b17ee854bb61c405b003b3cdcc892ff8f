@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "c46f5f9c_9ec6ef1d",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1480715
+      },
+      "writtenOn": "2026-08-25T21:57:22Z",
+      "side": 1,
+      "message": "Thank you. We will cherry-pick this change to internal",
+      "revId": "fa2e5d8b17ee854bb61c405b003b3cdcc892ff8f",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    }
+  ]
+}
