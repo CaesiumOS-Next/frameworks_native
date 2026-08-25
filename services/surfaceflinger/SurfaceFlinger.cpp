@@ -154,6 +154,7 @@
 #include "FrontEnd/LayerLog.h"
 #include "FrontEnd/LayerSnapshot.h"
 #include "HdrLayerInfoReporter.h"
+#include "SecureSurfaceReporter.h"
 #include "Jank/JankTracker.h"
 #include "Layer.h"
 #include "LayerProtoHelper.h"
@@ -2470,6 +2471,49 @@ status_t SurfaceFlinger::removeHdrLayerInfoListener(
     return OK;
 }
 
+status_t SurfaceFlinger::addSecureSurfaceListener(
+        const sp<IBinder>& displayToken, const sp<gui::ISecureSurfaceListener>& listener) {
+    if (!displayToken) {
+        return BAD_VALUE;
+    }
+
+    Mutex::Autolock lock(mStateLock);
+
+    const auto display = getDisplayDeviceLocked(displayToken);
+    if (!display) {
+        return NAME_NOT_FOUND;
+    }
+    const auto displayId = display->getId();
+    sp<SecureSurfaceReporter>& reporter = mSecureSurfaceListeners[displayId];
+    if (!reporter) {
+        reporter = sp<SecureSurfaceReporter>::make();
+    }
+    reporter->addListener(listener);
+
+    mAddingSecureSurfaceListener = true;
+    return OK;
+}
+
+status_t SurfaceFlinger::removeSecureSurfaceListener(
+        const sp<IBinder>& displayToken, const sp<gui::ISecureSurfaceListener>& listener) {
+    if (!displayToken) {
+        return BAD_VALUE;
+    }
+
+    Mutex::Autolock lock(mStateLock);
+
+    const auto display = getDisplayDeviceLocked(displayToken);
+    if (!display) {
+        return NAME_NOT_FOUND;
+    }
+    const auto displayId = display->getId();
+    sp<SecureSurfaceReporter>& reporter = mSecureSurfaceListeners[displayId];
+    if (reporter) {
+        reporter->removeListener(listener);
+    }
+    return OK;
+}
+
 status_t SurfaceFlinger::notifyPowerBoost(int32_t boostId) {
     using aidl::android::hardware::power::Boost;
     Boost powerBoost = static_cast<Boost>(boostId);
@@ -3888,6 +3932,7 @@ void SurfaceFlinger::onCompositionPresented(PhysicalDisplayId pacesetterId,
 
     std::vector<std::pair<compositionengine::Display*, sp<HdrLayerInfoReporter>>> hdrInfoListeners;
     bool haveNewHdrInfoListeners = false;
+    std::vector<std::pair<compositionengine::Display*, sp<SecureSurfaceReporter>>> secureListeners;
     ActivePictureTracker::Listeners activePictureListenersToAdd;
     ActivePictureTracker::Listeners activePictureListenersToRemove;
     {
@@ -3910,6 +3955,16 @@ void SurfaceFlinger::onCompositionPresented(PhysicalDisplayId pacesetterId,
         }
         haveNewHdrInfoListeners = mAddingHDRLayerInfoListener; // grab this with state lock
         mAddingHDRLayerInfoListener = false;
+
+        secureListeners.reserve(mSecureSurfaceListeners.size());
+        for (const auto& [displayId, reporter] : mSecureSurfaceListeners) {
+            if (reporter && reporter->hasListeners()) {
+                if (const auto display = getDisplayDeviceLocked(displayId)) {
+                    secureListeners.emplace_back(display->getCompositionDisplay().get(), reporter);
+                }
+            }
+        }
+        mAddingSecureSurfaceListener = false;
 
         std::swap(activePictureListenersToAdd, mActivePictureListenersToAdd);
         std::swap(activePictureListenersToRemove, mActivePictureListenersToRemove);
@@ -3974,6 +4029,24 @@ void SurfaceFlinger::onCompositionPresented(PhysicalDisplayId pacesetterId,
         }
     }
     mHdrLayerInfoChanged = false;
+
+    if (!secureListeners.empty()) {
+        for (auto& [compositionDisplay, reporter] : secureListeners) {
+            int32_t secureLayerCount = 0;
+            mLayerSnapshotBuilder.forEachVisibleSnapshot(
+                    [&, compositionDisplay = compositionDisplay](
+                            std::unique_ptr<frontend::LayerSnapshot>&
+                                    snapshot) FTL_FAKE_GUARD(kMainThreadContext) {
+                        if (snapshot->isVisible &&
+                            compositionDisplay->includesLayer(snapshot->outputFilter)) {
+                            if (snapshot->isSecure) {
+                                secureLayerCount++;
+                            }
+                        }
+                    });
+            reporter->dispatchSecureSurfaceState(secureLayerCount > 0);
+        }
+    }
 
     if (com_android_graphics_libgui_flags_apply_picture_profiles()) {
         // Track, update and notify changes to active pictures - layers that are undergoing
@@ -4633,6 +4706,8 @@ void SurfaceFlinger::processDisplayRemoved(const wp<IBinder>& displayToken) {
         if (display->isRefreshable()) {
             decRefreshableDisplays();
         }
+
+        mSecureSurfaceListeners.erase(display->getId());
     }
 
     mDisplays.erase(displayToken);
@@ -10512,6 +10587,24 @@ binder::Status SurfaceComposerAIDL::removeHdrLayerInfoListener(
     status_t status = checkControlDisplayBrightnessPermission();
     if (status == OK) {
         status = mFlinger->removeHdrLayerInfoListener(displayToken, listener);
+    }
+    return binderStatusFromStatusT(status);
+}
+
+binder::Status SurfaceComposerAIDL::addSecureSurfaceListener(
+        const sp<IBinder>& displayToken, const sp<gui::ISecureSurfaceListener>& listener) {
+    status_t status = checkAccessPermission();
+    if (status == OK) {
+        status = mFlinger->addSecureSurfaceListener(displayToken, listener);
+    }
+    return binderStatusFromStatusT(status);
+}
+
+binder::Status SurfaceComposerAIDL::removeSecureSurfaceListener(
+        const sp<IBinder>& displayToken, const sp<gui::ISecureSurfaceListener>& listener) {
+    status_t status = checkAccessPermission();
+    if (status == OK) {
+        status = mFlinger->removeSecureSurfaceListener(displayToken, listener);
     }
     return binderStatusFromStatusT(status);
 }

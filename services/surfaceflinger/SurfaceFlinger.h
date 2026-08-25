@@ -135,6 +135,7 @@ class FlagManager;
 class FpsReporter;
 class TunnelModeEnabledReporter;
 class HdrLayerInfoReporter;
+class SecureSurfaceReporter;
 class Layer;
 class MessageBase;
 class RefreshRateOverlay;
@@ -614,6 +615,10 @@ private:
                                      const sp<gui::IHdrLayerInfoListener>& listener);
     status_t removeHdrLayerInfoListener(const sp<IBinder>& displayToken,
                                         const sp<gui::IHdrLayerInfoListener>& listener);
+    status_t addSecureSurfaceListener(const sp<IBinder>& displayToken,
+                                      const sp<gui::ISecureSurfaceListener>& listener);
+    status_t removeSecureSurfaceListener(const sp<IBinder>& displayToken,
+                                         const sp<gui::ISecureSurfaceListener>& listener);
     status_t notifyPowerBoost(int32_t boostId);
     status_t setGlobalShadowSettings(const half4& ambientColor, const half4& spotColor,
                                      float lightPosY, float lightPosZ, float lightRadius);
@@ -1642,6 +1647,10 @@ private:
     std::unordered_map<DisplayId, sp<HdrLayerInfoReporter>> mHdrLayerInfoListeners
             GUARDED_BY(mStateLock);
 
+    std::unordered_map<DisplayId, sp<SecureSurfaceReporter>> mSecureSurfaceListeners
+            GUARDED_BY(mStateLock);
+    bool mAddingSecureSurfaceListener GUARDED_BY(mStateLock) = false;
+
     ActivePictureTracker mActivePictureTracker GUARDED_BY(kMainThreadContext);
     ActivePictureTracker::Listeners mActivePictureListenersToAdd GUARDED_BY(mStateLock);
     ActivePictureTracker::Listeners mActivePictureListenersToRemove GUARDED_BY(mStateLock);
@@ -1881,6 +1890,12 @@ public:
     binder::Status removeHdrLayerInfoListener(
             const sp<IBinder>& displayToken,
             const sp<gui::IHdrLayerInfoListener>& listener) override;
+    binder::Status addSecureSurfaceListener(
+            const sp<IBinder>& displayToken,
+            const sp<gui::ISecureSurfaceListener>& listener) override;
+    binder::Status removeSecureSurfaceListener(
+            const sp<IBinder>& displayToken,
+            const sp<gui::ISecureSurfaceListener>& listener) override;
 
     binder::Status notifyPowerBoost(int boostId) override;
     binder::Status setGlobalShadowSettings(const gui::Color& ambientColor,

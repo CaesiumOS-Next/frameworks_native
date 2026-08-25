@@ -3375,6 +3375,22 @@ status_t SurfaceComposerClient::removeHdrLayerInfoListener(
     return statusTFromBinderStatus(status);
 }
 
+status_t SurfaceComposerClient::addSecureSurfaceListener(
+        const sp<IBinder>& displayToken, const sp<gui::ISecureSurfaceListener>& listener) {
+    binder::Status status =
+            ComposerServiceAIDL::getComposerService()->addSecureSurfaceListener(displayToken,
+                                                                                listener);
+    return statusTFromBinderStatus(status);
+}
+
+status_t SurfaceComposerClient::removeSecureSurfaceListener(
+        const sp<IBinder>& displayToken, const sp<gui::ISecureSurfaceListener>& listener) {
+    binder::Status status =
+            ComposerServiceAIDL::getComposerService()->removeSecureSurfaceListener(displayToken,
+                                                                                   listener);
+    return statusTFromBinderStatus(status);
+}
+
 status_t SurfaceComposerClient::addActivePictureListener(
         const sp<gui::IActivePictureListener>& listener) {
     binder::Status status =
