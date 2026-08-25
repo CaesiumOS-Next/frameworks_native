@@ -43,6 +43,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "2a1e17ad_9d141a21",
+        "filename": "cmds/installd/InstalldNativeService.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 1659,
+      "author": {
+        "id": 2063047
+      },
+      "writtenOn": "2026-08-25T21:00:27Z",
+      "side": 1,
+      "message": "Done \n\nAs per comment, I have done changes. Please review once. \n\nWhat changed:\n\nAdded a private non-locking helper clearAppDataLocked() in native/cmds/installd/InstalldNativeService.h.\nUpdated clearAppData() to keep validation + LOCK_PACKAGE_USER() and then delegate to clearAppDataLocked() at native/cmds/installd/InstalldNativeService.cpp.\nUpdated snapshotAppData() to call clearAppDataLocked() instead of clearAppData() at native/cmds/installd/InstalldNativeService.cpp.\nUpdated restoreAppDataSnapshot() the same way at native/cmds/installd/InstalldNativeService.cpp.\nResult:\n\nsnapshotAppData() no longer re-acquires LOCK_PACKAGE_USER() while already holding it.\nThe same deadlock risk is also removed from restoreAppDataSnapshot().",
+      "parentUuid": "fe18f2a1_3c8dfbd1",
+      "range": {
+        "startLine": 1659,
+        "startChar": 0,
+        "endLine": 1659,
+        "endChar": 0
+      },
+      "revId": "4a13c1cac7b8f722962e530c194f2c164e91b6cc",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "cf68c3a1_992eee53",
         "filename": "cmds/installd/InstalldNativeService.cpp",
         "patchSetId": 1
@@ -54,6 +78,30 @@
       "writtenOn": "2026-08-25T16:24:29Z",
       "side": 1,
       "message": "Please fix this WARNING reported by autoreview issue finding: While this change addresses the deadlock during `restoreconAppData`, there is still a potential deadlock at line 1752 where `clearAppData` is called. `clearAppData` also acquires `LOCK_PACKAGE_USER()`, which will deadlock if a writer is pending. Consider refactoring `clearAppData` into a `Locked` version and calling it here.",
+      "range": {
+        "startLine": 1752,
+        "startChar": 0,
+        "endLine": 1752,
+        "endChar": 0
+      },
+      "revId": "4a13c1cac7b8f722962e530c194f2c164e91b6cc",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f6313113_4797bbf8",
+        "filename": "cmds/installd/InstalldNativeService.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 1752,
+      "author": {
+        "id": 2063047
+      },
+      "writtenOn": "2026-08-25T21:00:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cf68c3a1_992eee53",
       "range": {
         "startLine": 1752,
         "startChar": 0,
