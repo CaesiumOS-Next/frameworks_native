@@ -2,3 +2,6 @@
 jiyong@google.com #{LAST_RESORT_SUGGESTION}
 michaelwr@google.com #{LAST_RESORT_SUGGESTION}
 smoreland@google.com #{LAST_RESORT_SUGGESTION}
+
+# Scoped Android Build Approvers
+per-file Android.bp,Android.mk,CleanSpec.mk,BUILD,BUILD.bazel,*.bp,*.bzl,cargo_embargo.json = mdb/android-build-approvers
