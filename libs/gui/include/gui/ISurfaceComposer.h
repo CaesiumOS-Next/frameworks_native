@@ -26,6 +26,7 @@
 #include <android/gui/IHdrLayerInfoListener.h>
 #include <android/gui/IRegionSamplingListener.h>
 #include <android/gui/IScreenCaptureListener.h>
+#include <android/gui/ISecureSurfaceListener.h>
 #include <android/gui/ITunnelModeEnabledListener.h>
 #include <android/gui/IWindowInfosListener.h>
 #include <android/gui/IWindowInfosPublisher.h>

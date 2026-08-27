@@ -41,6 +41,7 @@ import android.gui.IFpsListener;
 import android.gui.IHdrLayerInfoListener;
 import android.gui.IRegionSamplingListener;
 import android.gui.IScreenCaptureListener;
+import android.gui.ISecureSurfaceListener;
 import android.gui.ISurfaceComposerClient;
 import android.gui.ITunnelModeEnabledListener;
 import android.gui.IWindowInfosListener;
@@ -482,6 +483,21 @@ interface ISurfaceComposer {
      *
      */
     void removeHdrLayerInfoListener(IBinder displayToken, IHdrLayerInfoListener listener);
+
+    /**
+     * Adds a listener that receives secure surface visibility information for the given display.
+     *
+     * Returns NO_ERROR upon success or NAME_NOT_FOUND if the display is invalid.
+     */
+    void addSecureSurfaceListener(IBinder displayToken, ISecureSurfaceListener listener);
+
+    /**
+     * Removes a listener that was added with addSecureSurfaceListener.
+     *
+     * Returns NO_ERROR upon success, NAME_NOT_FOUND if the display is invalid, and BAD_VALUE if
+     *     the listener wasn't registered.
+     */
+    void removeSecureSurfaceListener(IBinder displayToken, ISecureSurfaceListener listener);
 
     /**
      * Associates the given IBinder token with the AGSL shaderString. After registration the

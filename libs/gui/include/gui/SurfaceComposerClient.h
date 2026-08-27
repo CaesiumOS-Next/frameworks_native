@@ -308,6 +308,11 @@ public:
     static status_t removeHdrLayerInfoListener(const sp<IBinder>& displayToken,
                                                const sp<gui::IHdrLayerInfoListener>& listener);
 
+    static status_t addSecureSurfaceListener(const sp<IBinder>& displayToken,
+                                             const sp<gui::ISecureSurfaceListener>& listener);
+    static status_t removeSecureSurfaceListener(const sp<IBinder>& displayToken,
+                                                const sp<gui::ISecureSurfaceListener>& listener);
+
     static status_t addActivePictureListener(const sp<gui::IActivePictureListener>& listener);
 
     static status_t removeActivePictureListener(const sp<gui::IActivePictureListener>& listener);
