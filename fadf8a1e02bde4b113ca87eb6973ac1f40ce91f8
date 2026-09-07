@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "8516ef4c_4270f452",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1414712
+      },
+      "writtenOn": "2026-09-07T10:16:52Z",
+      "side": 1,
+      "message": "Hi Cody,\nCould you please help review this CL?\nThis patch adds a null check (with KHR fallback) before calling GetPhysicalDeviceImageFormatProperties2 in the loader\u0027s SupportsSurfaceFormat, fixing the SIGSEGV crash that occurred when a Vulkan 1.0 instance left both that entrypoint and its KHR alias null.\nDetailed information can be found at https://issuetracker.google.com/issues/558150893.\nThanks\nJessie",
+      "revId": "fadf8a1e02bde4b113ca87eb6973ac1f40ce91f8",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    }
+  ]
+}
