@@ -760,10 +760,15 @@ bool SupportsSurfaceFormat(const InstanceDriverTable& driver,
     properties.sType = VK_STRUCTURE_TYPE_IMAGE_FORMAT_PROPERTIES_2;
     properties.pNext = nullptr;
 
-    VkResult result = driver.GetPhysicalDeviceImageFormatProperties2(
-        pdev, &formatInfo, &properties);
-
-    return result == VK_SUCCESS;
+    if (driver.GetPhysicalDeviceImageFormatProperties2) {
+        return driver.GetPhysicalDeviceImageFormatProperties2(
+                   pdev, &formatInfo, &properties) == VK_SUCCESS;
+    }
+    if (driver.GetPhysicalDeviceImageFormatProperties2KHR) {
+        return driver.GetPhysicalDeviceImageFormatProperties2KHR(
+                   pdev, &formatInfo, &properties) == VK_SUCCESS;
+    }
+    return false;
 }
 
 }  // anonymous namespace
