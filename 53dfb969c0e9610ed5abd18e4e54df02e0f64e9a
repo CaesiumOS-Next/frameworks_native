@@ -16,6 +16,23 @@
       "message": "LGTM.",
       "revId": "53dfb969c0e9610ed5abd18e4e54df02e0f64e9a",
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f1afcdfe_ad6441d9",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5145626
+      },
+      "writtenOn": "2026-09-09T15:58:19Z",
+      "side": 1,
+      "message": "Hi, are we planning to merge this change? It has been pending for a while. I am facing TVTS failures due to this issue.",
+      "revId": "53dfb969c0e9610ed5abd18e4e54df02e0f64e9a",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     }
   ]
 }
