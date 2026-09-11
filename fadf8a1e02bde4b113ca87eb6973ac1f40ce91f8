@@ -33,6 +33,24 @@
       "message": "LGTM, thank you for the fix!\n+Chris as well.\nWe\u0027ll need to land this internally and it will roll out with the next update.",
       "revId": "fadf8a1e02bde4b113ca87eb6973ac1f40ce91f8",
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "d8d8ed45_167992a5",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1414712
+      },
+      "writtenOn": "2026-09-11T02:32:10Z",
+      "side": 1,
+      "message": "Hi Cody,\nThanks for the review!\nI noticed that the patch still doesn\u0027t satisfy the \"Submit Requirements\". It looks like the \"Review-Enforcement\" requirement has not been met yet, and I also see that \"Presubmit-Verified+2\" was removed by the Treehugger Robot.\nIs there anything else I can do from my side? Do I need another +2 or any additional approval to get this submitted?\nWhen you say you\u0027ll land this internally, does the patch need to satisfy all the \"Submit Requirements\" first, or will you handle the internal cherry-pick/merge manually?\n\nThanks!\nJessie",
+      "parentUuid": "3e4e53d2_86e9940c",
+      "revId": "fadf8a1e02bde4b113ca87eb6973ac1f40ce91f8",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     }
   ]
 }
