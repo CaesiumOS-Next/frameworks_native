@@ -51,6 +51,24 @@
       "parentUuid": "3e4e53d2_86e9940c",
       "revId": "fadf8a1e02bde4b113ca87eb6973ac1f40ce91f8",
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "cf7bae5d_a4c94f0e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1097542
+      },
+      "writtenOn": "2026-09-14T13:27:39Z",
+      "side": 1,
+      "message": "Unfortunately we can\u0027t land patches in AOSP anymore, especially for released versions of Android.  I\u0027ve cherry-picked the change to our internal main branch where it will go through release testing, then show up in the next public release of Android source.",
+      "parentUuid": "d8d8ed45_167992a5",
+      "revId": "fadf8a1e02bde4b113ca87eb6973ac1f40ce91f8",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     }
   ]
 }
