@@ -2,6 +2,7 @@
 #include <binder/IBinder.h>
 #include <binder/IPCThreadState.h>
 #include <binder/IServiceManager.h>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -279,12 +280,47 @@ static inline uint64_t tickNano(Tick& sta, Tick& end) {
   return uint64_t(chrono::duration_cast<chrono::nanoseconds>(end - sta).count());
 }
 
+/*
+ * Latency histogram: 64 ns buckets up to 64 us, then log2 buckets up to ~4 s.
+ *
+ */
+#define HIST_LINEAR_SHIFT   6                       /* bucket = 64 ns */
+#define HIST_LINEAR_BUCKETS (1 << 10)               /* covers 0 .. 65535 ns */
+#define HIST_LOG_BUCKETS    16                      /* then 64 us .. 4 s, log2 */
+#define HIST_BUCKETS        (HIST_LINEAR_BUCKETS + HIST_LOG_BUCKETS)
+
+static inline int hist_index(uint64_t ns) {
+  if (ns < (1ULL << 16)) {
+    int idx = static_cast<int>(ns >> HIST_LINEAR_SHIFT);
+    return (idx >= HIST_LINEAR_BUCKETS) ? (HIST_LINEAR_BUCKETS - 1) : idx;
+  }
+  uint64_t shifted = ns >> 16;
+  if (shifted == 0) return HIST_LINEAR_BUCKETS;
+  int log_idx = 63 - __builtin_clzll(shifted);
+  if (log_idx >= HIST_LOG_BUCKETS) {
+    log_idx = HIST_LOG_BUCKETS - 1;
+  }
+  return HIST_LINEAR_BUCKETS + log_idx;
+}
+
+/* Representative latency of a bucket in ns (a value inside the bucket). */
+static inline double hist_bucket_ns(int i) {
+  if (i < 0) return 0.0;
+  if (i >= HIST_BUCKETS) i = HIST_BUCKETS - 1;
+  if (i < HIST_LINEAR_BUCKETS) {
+    return static_cast<double>((i << HIST_LINEAR_SHIFT) + (1 << (HIST_LINEAR_SHIFT - 1)));
+  }
+  int log_idx = i - HIST_LINEAR_BUCKETS;
+  return static_cast<double>(1ULL << (16 + log_idx)) * 1.5;
+}
+
 struct Results {
   uint64_t m_best = 0xffffffffffffffffULL;
   uint64_t m_worst = 0;
   uint64_t m_transactions = 0;
   uint64_t m_total_time = 0;
   uint64_t m_miss = 0;
+  uint32_t m_hist[HIST_BUCKETS] = {0};
   bool tracing;
   Results() : tracing(false) {}
   explicit Results(bool _tracing) : tracing(_tracing) {
@@ -297,6 +333,7 @@ struct Results {
     m_worst = max(nano, m_worst);
     m_transactions += 1;
     m_total_time += nano;
+    m_hist[hist_index(nano)]++;
     if (miss_deadline(nano)) m_miss++;
     if (miss_deadline(nano) && tracing) {
       // There might be multiple process pair running the test concurrently
@@ -310,21 +347,87 @@ struct Results {
       exit(1);
     }
   }
+  /*
+   * Multi-rank percentiles computation of the recorded latencies in ns.
+   */
+  void compute_percentiles(double& p50, double& p90,
+                           double& p99, double& p999) const {
+    if (m_transactions == 0) {
+      p50 = p90 = p99 = p999 = 0.0;
+      return;
+    }
+
+    const double total_tx = static_cast<double>(m_transactions);
+    const auto w50  = static_cast<uint64_t>(ceil(0.500 * total_tx));
+    const auto w90  = static_cast<uint64_t>(ceil(0.900 * total_tx));
+    const auto w99  = static_cast<uint64_t>(ceil(0.990 * total_tx));
+    const auto w999 = static_cast<uint64_t>(ceil(0.999 * total_tx));
+
+    uint64_t accumulated_samples = 0;
+    bool f50 = false, f90 = false, f99 = false, f999 = false;
+
+    p50 = p90 = p99 = p999 = static_cast<double>(m_worst);
+
+    for (int i = 0; i < HIST_BUCKETS; ++i) {
+      accumulated_samples += m_hist[i];
+
+      if (!f50 && accumulated_samples >= w50) {
+        p50 = hist_bucket_ns(i);
+        f50 = true;
+      }
+      if (!f90 && accumulated_samples >= w90) {
+        p90 = hist_bucket_ns(i);
+        f90 = true;
+      }
+      if (!f99 && accumulated_samples >= w99) {
+        p99 = hist_bucket_ns(i);
+        f99 = true;
+      }
+      if (!f999 && accumulated_samples >= w999) {
+        p999 = hist_bucket_ns(i);
+        f999 = true;
+        break;
+      }
+    }
+
+    auto clamp_to_bounds = [this](double val) {
+      if (val > static_cast<double>(m_worst)) return static_cast<double>(m_worst);
+      if (val < static_cast<double>(m_best))  return static_cast<double>(m_best);
+      return val;
+    };
+
+    p50  = clamp_to_bounds(p50);
+    p90  = clamp_to_bounds(p90);
+    p99  = clamp_to_bounds(p99);
+    p999 = clamp_to_bounds(p999);
+  }
+
   void dump() const {
     if (m_transactions == 0) {
-        cout << "{ \"avg\":0,\"wst\":0,\"bst\":0,\"miss\":0,\"meetR\":1 }";
+        cout << "{ \"avg\":0,\"wst\":0,\"bst\":0,\"miss\":0,\"meetR\":1,"
+                "\"p50\":0,\"p90\":0,\"p99\":0,\"p999\":0 }";
         return;
     }
     double best = (double)m_best / 1.0E6;
     double worst = (double)m_worst / 1.0E6;
     double average = (double)m_total_time / m_transactions / 1.0E6;
+
+    double p50, p90, p99, p999;
+    compute_percentiles(p50, p90, p99, p999);
+
     // TODO: libjson?
     int W = DUMP_PRESICION + 2;
     cout << setprecision(DUMP_PRESICION) << "{ \"avg\":" << setw(W) << left
          << average << ",\"wst\":" << setw(W) << left << worst
          << ",\"bst\":" << setw(W) << left << best << ",\"miss\":" << left
          << m_miss << ",\"meetR\":" << left << setprecision(DUMP_PRESICION + 3)
-         << (1.0 - (double)m_miss / m_transactions) << "}";
+         << (1.0 - (double)m_miss / m_transactions)
+         << setprecision(DUMP_PRESICION)
+         << ",\"p50\":"   << setw(W) << left << p50   / 1.0E6
+         << ",\"p90\":"   << setw(W) << left << p90   / 1.0E6
+         << ",\"p99\":"   << setw(W) << left << p99   / 1.0E6
+         << ",\"p999\":"  << setw(W) << left << p999  / 1.0E6
+         << "}";
   }
 };
 
@@ -366,6 +469,8 @@ struct TieredStats {
       r.m_transactions += tier[i].m_transactions;
       r.m_total_time += tier[i].m_total_time;
       r.m_miss += tier[i].m_miss;
+      for (int b = 0; b < HIST_BUCKETS; ++b)
+        r.m_hist[b] += tier[i].m_hist[b];
     }
     return r;
   }
