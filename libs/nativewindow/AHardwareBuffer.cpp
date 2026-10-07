@@ -149,6 +149,22 @@ static_assert(
 static_assert(static_cast<int>(aidl::android::hardware::graphics::common::PixelFormat::RAW14) ==
                 AHARDWAREBUFFER_FORMAT_RAW14,
         "HAL and AHardwareBuffer pixel format don't match");
+static_assert(
+        static_cast<int>(aidl::android::hardware::graphics::common::PixelFormat::YCBCR_P012) ==
+                AHARDWAREBUFFER_FORMAT_YCbCr_P012,
+        "HAL and AHardwareBuffer pixel format don't match");
+static_assert(
+        static_cast<int>(aidl::android::hardware::graphics::common::PixelFormat::YCBCR_P212) ==
+                AHARDWAREBUFFER_FORMAT_YCbCr_P212,
+        "HAL and AHardwareBuffer pixel format don't match");
+static_assert(
+        static_cast<int>(aidl::android::hardware::graphics::common::PixelFormat::YCBCR_P014) ==
+                AHARDWAREBUFFER_FORMAT_YCbCr_P014,
+        "HAL and AHardwareBuffer pixel format don't match");
+static_assert(
+        static_cast<int>(aidl::android::hardware::graphics::common::PixelFormat::YCBCR_P214) ==
+                AHARDWAREBUFFER_FORMAT_YCbCr_P214,
+        "HAL and AHardwareBuffer pixel format don't match");
 
 static enum AHardwareBufferStatus filterStatus(status_t status) {
     switch (status) {
@@ -337,10 +353,14 @@ int AHardwareBuffer_lockPlanes(AHardwareBuffer* buffer, uint64_t usage,
       if (result == 0) {
         outPlanes->planeCount = 3;
         outPlanes->planes[0].data = yuvData.y;
-        // P010 & P210 are word-aligned 10-bit semiplaner, and YCbCr_422_I is a single interleaved
-        // plane
+        // P0xx and P2xx are word-aligned semiplanar formats, and YCbCr_422_I is a single
+        // interleaved plane.
         if (format == AHARDWAREBUFFER_FORMAT_YCbCr_P010 ||
             format == AHARDWAREBUFFER_FORMAT_YCbCr_P210 ||
+            format == AHARDWAREBUFFER_FORMAT_YCbCr_P012 ||
+            format == AHARDWAREBUFFER_FORMAT_YCbCr_P212 ||
+            format == AHARDWAREBUFFER_FORMAT_YCbCr_P014 ||
+            format == AHARDWAREBUFFER_FORMAT_YCbCr_P214 ||
             format == AHARDWAREBUFFER_FORMAT_YCbCr_422_I) {
             outPlanes->planes[0].pixelStride = 2;
         } else {
@@ -764,6 +784,10 @@ bool AHardwareBuffer_formatIsYuv(uint32_t format) {
         case AHARDWAREBUFFER_FORMAT_YCbCr_422_I:
         case AHARDWAREBUFFER_FORMAT_YCbCr_P010:
         case AHARDWAREBUFFER_FORMAT_YCbCr_P210:
+        case AHARDWAREBUFFER_FORMAT_YCbCr_P012:
+        case AHARDWAREBUFFER_FORMAT_YCbCr_P212:
+        case AHARDWAREBUFFER_FORMAT_YCbCr_P014:
+        case AHARDWAREBUFFER_FORMAT_YCbCr_P214:
             return true;
         default:
             return false;

@@ -266,6 +266,34 @@ enum AHardwareBuffer_Format {
      */
     AHARDWAREBUFFER_FORMAT_B10G10R10X2_UNORM        = 0x44,
 
+    /**
+     * Corresponding formats:
+     *   Vulkan: VK_FORMAT_G12X4_B12X4R12X4_2PLANE_420_UNORM_3PACK16
+     *   OpenGL ES: N/A
+     */
+    AHARDWAREBUFFER_FORMAT_YCbCr_P012               = 0x45,
+
+    /**
+     * Corresponding formats:
+     *   Vulkan: VK_FORMAT_G12X4_B12X4R12X4_2PLANE_422_UNORM_3PACK16
+     *   OpenGL ES: N/A
+     */
+    AHARDWAREBUFFER_FORMAT_YCbCr_P212               = 0x46,
+
+    /**
+     * Corresponding formats:
+     *   Vulkan: VK_FORMAT_G14X2_B14X2R14X2_2PLANE_420_UNORM_3PACK16
+     *   OpenGL ES: N/A
+     */
+    AHARDWAREBUFFER_FORMAT_YCbCr_P014               = 0x47,
+
+    /**
+     * Corresponding formats:
+     *   Vulkan: VK_FORMAT_G14X2_B14X2R14X2_2PLANE_422_UNORM_3PACK16
+     *   OpenGL ES: N/A
+     */
+    AHARDWAREBUFFER_FORMAT_YCbCr_P214               = 0x48,
+
 };
 
 /**
