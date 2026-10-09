@@ -1198,8 +1198,12 @@ Error HidlComposer::setDisplayBrightness(Display display, float brightness, floa
     if (!mClient_2_3) {
         return Error::UNSUPPORTED;
     }
+    // Check isOk() to handle HIDL transport error from setDisplayBrightness.
     auto ret = mClient_2_3->setDisplayBrightness(display, brightness);
-    return static_cast<Error>(unwrapRet(ret));
+    if (!ret.isOk()) {
+        return Error::NO_RESOURCES;
+    }
+    return static_cast<Error>(ret);
 }
 
 // Composer HAL 2.4
