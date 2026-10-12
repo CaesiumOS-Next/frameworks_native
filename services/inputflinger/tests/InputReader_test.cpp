@@ -4031,7 +4031,7 @@ TEST_F(SingleTouchInputMapperTest, Process_WhenTouchStartsOutsideDisplayAndMoves
 
 TEST_F(SingleTouchInputMapperTest, Process_NormalSingleTouchGesture_VirtualDisplay) {
     addConfigurationProperty("touch.deviceType", "touchScreen");
-    addConfigurationProperty("touch.displayId", VIRTUAL_DISPLAY_UNIQUE_ID);
+    addConfigurationProperty("touch.uniqueDisplayId", VIRTUAL_DISPLAY_UNIQUE_ID);
 
     prepareVirtualDisplay(ui::ROTATION_0);
     prepareButtons();
@@ -4122,6 +4122,24 @@ TEST_F(SingleTouchInputMapperTest, Process_NormalSingleTouchGesture_VirtualDispl
     // Should not have sent any more keys or motions.
     ASSERT_NO_FATAL_FAILURE(mFakeListener->assertNotifyKeyWasNotCalled());
     ASSERT_NO_FATAL_FAILURE(mFakeListener->assertNotifyMotionWasNotCalled());
+}
+
+// TODO(b/131122120): Remove once the legacy "touch.displayId" key is no longer supported.
+TEST_F(SingleTouchInputMapperTest, LegacyDisplayId_StillAssociatesWithMatchingDisplay) {
+    addConfigurationProperty("touch.deviceType", "touchScreen");
+    addConfigurationProperty("touch.displayId", VIRTUAL_DISPLAY_UNIQUE_ID);
+
+    prepareDisplay(ui::ROTATION_0);
+    prepareVirtualDisplay(ui::ROTATION_0);
+    prepareButtons();
+    prepareAxes(POSITION);
+    SingleTouchInputMapper& mapper = constructAndAddMapper<SingleTouchInputMapper>();
+
+    processDown(mapper, 100, 125);
+    processSync(mapper);
+
+    ASSERT_NO_FATAL_FAILURE(mFakeListener->assertNotifyMotionWasCalled(
+            AllOf(WithMotionAction(AMOTION_EVENT_ACTION_DOWN), WithDisplayId(VIRTUAL_DISPLAY_ID))));
 }
 
 TEST_F(SingleTouchInputMapperTest, Process_NormalSingleTouchGesture) {
