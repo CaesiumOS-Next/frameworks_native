@@ -1,0 +1,79 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "65da9a0d_98879da3",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1981500
+      },
+      "writtenOn": "2026-10-12T17:16:45Z",
+      "side": 1,
+      "message": "Any reason this is in AOSP? Instead of internal main first?",
+      "revId": "6f53b47feb71222419b88e6d1aaae3b4386e4c05",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "0fac27ab_c433a998",
+        "filename": "services/inputflinger/reader/mapper/TouchInputMapper.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1981500
+      },
+      "writtenOn": "2026-10-12T17:16:45Z",
+      "side": 1,
+      "message": "nit: should this be `!uniqueDisplayId.has_value()`",
+      "range": {
+        "startLine": 390,
+        "startChar": 13,
+        "endLine": 390,
+        "endChar": 28
+      },
+      "fixSuggestions": [
+        {
+          "fixId": "fda1b157_671302a8",
+          "description": "prompt_to_edit API",
+          "replacements": [
+            {
+              "path": "services/inputflinger/reader/mapper/TouchInputMapper.cpp",
+              "range": {
+                "startLine": 390,
+                "startChar": 0,
+                "endLine": 391,
+                "endChar": 0
+              },
+              "replacement": "        if (!uniqueDisplayId.has_value()) {\n"
+            }
+          ]
+        }
+      ],
+      "revId": "6f53b47feb71222419b88e6d1aaae3b4386e4c05",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "dc146014_2507e57e",
+        "filename": "services/inputflinger/tests/InputReader_test.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 4128,
+      "author": {
+        "id": 1981500
+      },
+      "writtenOn": "2026-10-12T17:16:45Z",
+      "side": 1,
+      "message": "I\u0027d suggest having a test where we have both `uniqueDisplayId` and `displayId`, to verify that `uniqueDisplayId` takes precedence when both properties are set.",
+      "revId": "6f53b47feb71222419b88e6d1aaae3b4386e4c05",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    }
+  ]
+}
