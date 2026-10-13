@@ -33,6 +33,24 @@
       "message": "this will impact every app that uses choreographer which doesn\u0027t seem palatable.\n\n+Dom FYI. we have an internal change that increases the socket size to 32 KB for specifically system server which should mitigate what I think your issue is. we also have plans to move display state callbacks to binder, which would also alleviate this.",
       "revId": "cba81b4bfd847c3ff3bcb48aef0e0d3a6acebc46",
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "74e1b018_5ca399fa",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 2046913
+      },
+      "writtenOn": "2026-10-13T02:55:02Z",
+      "side": 1,
+      "message": "Great.\nAnd, there is an issue tracker for this, https://partnerissuetracker.corp.google.com/u/0/issues/524933475, FYI",
+      "parentUuid": "57e1517f_a8165df7",
+      "revId": "cba81b4bfd847c3ff3bcb48aef0e0d3a6acebc46",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     }
   ]
 }
