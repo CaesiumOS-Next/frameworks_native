@@ -383,7 +383,14 @@ TouchInputMapper::Parameters TouchInputMapper::computeParameters(
     parameters.associatedDisplayIsExternal = false;
     if (parameters.deviceType == Parameters::DeviceType::TOUCH_SCREEN) {
         parameters.associatedDisplayIsExternal = deviceContext.isExternal();
-        parameters.uniqueDisplayId = config.getString("touch.displayId").value_or("").c_str();
+        // "touch.uniqueDisplayId" replaces the legacy "touch.displayId" key. The legacy key is
+        // still honored so that existing .idc files keep working.
+        // TODO(b/131122120): Remove the "touch.displayId" fallback once .idc files are migrated.
+        std::optional<std::string> uniqueDisplayId = config.getString("touch.uniqueDisplayId");
+        if (!uniqueDisplayId.has_value()) {
+            uniqueDisplayId = config.getString("touch.displayId");
+        }
+        parameters.uniqueDisplayId = uniqueDisplayId.value_or("");
     }
 
     // Initial downs on external touch devices should wake the device.
