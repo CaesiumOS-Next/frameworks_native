@@ -20,6 +20,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "b48329e8_6b955539",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1149384
+      },
+      "writtenOn": "2026-10-13T06:18:08Z",
+      "side": 1,
+      "message": "Yeah, this needs to move to internal Gerrit. You can\u0027t merge stuff into aosp anymore.",
+      "parentUuid": "65da9a0d_98879da3",
+      "revId": "6f53b47feb71222419b88e6d1aaae3b4386e4c05",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "0fac27ab_c433a998",
         "filename": "services/inputflinger/reader/mapper/TouchInputMapper.cpp",
         "patchSetId": 1
