@@ -36,6 +36,24 @@
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "fc52028e_f38dae6a",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 3527639
+      },
+      "writtenOn": "2026-10-14T10:27:50Z",
+      "side": 1,
+      "message": "My bad, I accidentally set up my workspace from AOSP. Here\u0027s the new correct CL: ag/42943696 . Abandoning this one.",
+      "parentUuid": "b48329e8_6b955539",
+      "revId": "6f53b47feb71222419b88e6d1aaae3b4386e4c05",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "0fac27ab_c433a998",
@@ -77,6 +95,30 @@
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "ba388ee7_b92f64af",
+        "filename": "services/inputflinger/reader/mapper/TouchInputMapper.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 3527639
+      },
+      "writtenOn": "2026-10-14T10:27:50Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "0fac27ab_c433a998",
+      "range": {
+        "startLine": 390,
+        "startChar": 13,
+        "endLine": 390,
+        "endChar": 28
+      },
+      "revId": "6f53b47feb71222419b88e6d1aaae3b4386e4c05",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "dc146014_2507e57e",
@@ -90,6 +132,24 @@
       "writtenOn": "2026-10-12T17:16:45Z",
       "side": 1,
       "message": "I\u0027d suggest having a test where we have both `uniqueDisplayId` and `displayId`, to verify that `uniqueDisplayId` takes precedence when both properties are set.",
+      "revId": "6f53b47feb71222419b88e6d1aaae3b4386e4c05",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "f3d67bfe_2bd0e2e2",
+        "filename": "services/inputflinger/tests/InputReader_test.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 4128,
+      "author": {
+        "id": 3527639
+      },
+      "writtenOn": "2026-10-14T10:27:50Z",
+      "side": 1,
+      "message": "Good suggestion, thanks! I\u0027d actually written this exact test and verified it passes (and fails if the lookup order is swapped), but removed it since we plan to eventually drop the legacy touch.displayId key. Agreed it\u0027s worth guarding until then, so I\u0027ve re-added it with a TODO(b/131122120) to remove it along with the fallback.",
+      "parentUuid": "dc146014_2507e57e",
       "revId": "6f53b47feb71222419b88e6d1aaae3b4386e4c05",
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     }
