@@ -6409,9 +6409,26 @@ SurfaceFlinger::setPhysicalDisplayPowerModeAsync(const sp<DisplayDevice>& displa
 
     applyOptimizationPolicy(__func__);
 
+    const bool manageBlurBuffers =
+            FlagManager::getInstance().window_blur_kawase2_preallocate_buffers();
     if (mScheduler->setDisplayPowerMode(displayId, mode)) {
         MODE_TRANSITION_LOCK();
         onNewPacesetterDisplay();
+    } else if (manageBlurBuffers && !couldRefresh && canRefresh) {
+        // Reallocate protected blur buffers even if the display resumes at the same size and
+        // remains the pacesetter. They may have been released while all displays were off. This
+        // is queued to the RenderEngine thread, so it does not delay the power mode change.
+        ui::Size largestFramebufferSize;
+        {
+            Mutex::Autolock lock(mStateLock);
+            largestFramebufferSize = findLargestFramebufferSizeLocked();
+        }
+        getRenderEngine().onActiveDisplaySizeChanged(largestFramebufferSize);
+    }
+
+    // Must run after the pacesetter update above, which may reallocate the blur buffers.
+    if (manageBlurBuffers && couldRefresh && !canRefresh) {
+        releaseBlurBuffersIfPhysicalDisplaysOff();
     }
 
     const auto activeMode = display->refreshRateSelector().getActiveMode().modePtr;
@@ -6586,6 +6603,21 @@ void SurfaceFlinger::applyOptimizationPolicy(const char* whence) FTL_FAKE_GUARD(
                             OptimizationPolicy::optimizeForPerformance;
                 });
         mScheduler->enableSyntheticVsync(!disableSyntheticVsync);
+    }
+}
+
+void SurfaceFlinger::releaseBlurBuffersIfPhysicalDisplaysOff() {
+    const auto& displays = FTL_FAKE_GUARD(mStateLock, mDisplays);
+    // Virtual displays are ignored, as they may stay on while the device suspends (e.g. on
+    // automotive). RenderEngine uses transient blur surfaces for them until a physical display
+    // resumes.
+    const bool anyPhysicalDisplayRefreshable =
+            std::any_of(displays.begin(), displays.end(), [](const auto& pair) {
+                return !pair.second->isVirtual() && pair.second->isRefreshable();
+            });
+    if (!anyPhysicalDisplayRefreshable) {
+        // Protected blur buffers can otherwise prevent the secure heap from freezing on suspend.
+        getRenderEngine().onDisplaysPoweredOff();
     }
 }
 

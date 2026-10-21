@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <atomic>
+
 #include <cutils/properties.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -157,6 +159,15 @@ TEST_F(RenderEngineThreadedTest, supportsBackgroundBlur_returnsTrue) {
     EXPECT_CALL(*mRenderEngine, supportsBackgroundBlur()).WillOnce(Return(true));
     status_t result = mThreadedRE->supportsBackgroundBlur();
     ASSERT_EQ(true, result);
+}
+
+TEST_F(RenderEngineThreadedTest, onDisplaysPoweredOff) {
+    std::atomic_bool callbackCompleted = false;
+    EXPECT_CALL(*mRenderEngine, onDisplaysPoweredOff()).WillOnce([&callbackCompleted] {
+        callbackCompleted.store(true);
+    });
+    mThreadedRE->onDisplaysPoweredOff();
+    EXPECT_TRUE(callbackCompleted.load());
 }
 
 TEST_F(RenderEngineThreadedTest, drawLayers) {

@@ -219,6 +219,12 @@ public:
     // so that it can configure its internal caches accordingly.
     virtual void onActiveDisplaySizeChanged(ui::Size size) = 0;
 
+    // Notify RenderEngine that all physical displays are powered off, so it can release memory
+    // preallocated for compositing them. Returns after protected allocations have been released,
+    // as they can otherwise block suspend/hibernation. The memory is preallocated again on the
+    // next onActiveDisplaySizeChanged().
+    virtual void onDisplaysPoweredOff() {}
+
     // Renders layers for a particular display via GPU composition. This method
     // should be called for every display that needs to be rendered via the GPU.
     // @param display The display-wide settings that should be applied prior to

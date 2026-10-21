@@ -192,6 +192,60 @@ TEST_F(FoldableTest, disableVsyncOnPowerOffPacesetter) {
     ASSERT_EQ(mFlinger.scheduler()->pacesetterDisplayId(), getOuterDisplayId());
 }
 
+TEST_F(FoldableTest, keepsBlurBuffersWhileAnyDisplayIsOn) {
+    SET_FLAG_FOR_TEST(flags::window_blur_kawase2_preallocate_buffers, true);
+    mFlinger.setPhysicalDisplayPowerMode(mInnerDisplay, PowerMode::ON);
+    mFlinger.setPhysicalDisplayPowerMode(mOuterDisplay, PowerMode::ON);
+
+    EXPECT_CALL(*mRenderEngine, onDisplaysPoweredOff()).Times(0);
+    mFlinger.setPhysicalDisplayPowerMode(mInnerDisplay, PowerMode::OFF);
+}
+
+TEST_F(FoldableTest, releasesBlurBuffersAfterPacesetterUpdateWhenAllDisplaysOff) {
+    SET_FLAG_FOR_TEST(flags::window_blur_kawase2_preallocate_buffers, true);
+    mFlinger.setPhysicalDisplayPowerMode(mInnerDisplay, PowerMode::ON);
+    mFlinger.setPhysicalDisplayPowerMode(mOuterDisplay, PowerMode::ON);
+
+    {
+        // A pacesetter change reallocates the buffers, so it must not happen after the release.
+        testing::InSequence seq;
+        EXPECT_CALL(*mRenderEngine, onActiveDisplaySizeChanged(_)).Times(testing::AnyNumber());
+        EXPECT_CALL(*mRenderEngine, onDisplaysPoweredOff()).Times(1);
+    }
+    mFlinger.setPhysicalDisplayPowerMode(mInnerDisplay, PowerMode::OFF);
+    mFlinger.setPhysicalDisplayPowerMode(mOuterDisplay, PowerMode::OFF);
+}
+
+TEST_F(FoldableTest, releasesBlurBuffersWhileVirtualDisplayIsOn) {
+    SET_FLAG_FOR_TEST(flags::window_blur_kawase2_preallocate_buffers, true);
+    NonHwcVirtualDisplayVariant<1024, 768, Secure::TRUE>::makeFakeExistingDisplayInjector(this)
+            .setPowerMode(PowerMode::ON)
+            .inject();
+    mFlinger.setPhysicalDisplayPowerMode(mInnerDisplay, PowerMode::ON);
+
+    EXPECT_CALL(*mRenderEngine, onDisplaysPoweredOff()).Times(1);
+    mFlinger.setPhysicalDisplayPowerMode(mInnerDisplay, PowerMode::OFF);
+}
+
+TEST_F(FoldableTest, reallocatesBlurBuffersWhenDisplayResumes) {
+    SET_FLAG_FOR_TEST(flags::window_blur_kawase2_preallocate_buffers, true);
+    mFlinger.setPhysicalDisplayPowerMode(mInnerDisplay, PowerMode::ON);
+    mFlinger.setPhysicalDisplayPowerMode(mInnerDisplay, PowerMode::OFF);
+    ASSERT_EQ(mFlinger.scheduler()->pacesetterDisplayId(), getInnerDisplayId());
+
+    // The pacesetter does not change, but the buffers must still be reallocated.
+    EXPECT_CALL(*mRenderEngine, onActiveDisplaySizeChanged(_)).Times(1);
+    mFlinger.setPhysicalDisplayPowerMode(mInnerDisplay, PowerMode::ON);
+}
+
+TEST_F(FoldableTest, doesNotReleaseBlurBuffersIfFlagDisabled) {
+    SET_FLAG_FOR_TEST(flags::window_blur_kawase2_preallocate_buffers, false);
+    mFlinger.setPhysicalDisplayPowerMode(mInnerDisplay, PowerMode::ON);
+
+    EXPECT_CALL(*mRenderEngine, onDisplaysPoweredOff()).Times(0);
+    mFlinger.setPhysicalDisplayPowerMode(mInnerDisplay, PowerMode::OFF);
+}
+
 TEST_F(FoldableTest, layerCachingTexturePoolOnFrontInternal) {
     ON_CALL(mFlinger.mockSchedulerCallback(), enableLayerCachingTexturePool)
             .WillByDefault([&](PhysicalDisplayId displayId, bool enable) {

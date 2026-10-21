@@ -41,6 +41,9 @@
 #include <include/gpu/ganesh/SkSurfaceGanesh.h>
 #include <log/log.h>
 
+#include <algorithm>
+#include <iterator>
+
 #include "RuntimeEffectManager.h"
 #include "renderengine/RenderEngine.h"
 
@@ -237,7 +240,8 @@ sk_sp<SkImage> KawaseBlurDualFilterV2::generateTemporaryImage(SkiaGpuContext* co
             FlagManager::getInstance().window_blur_kawase2_preallocate_buffers() &&
             (isProtected ||
              context->getBackend_onlyUseForCriticalWorkarounds() ==
-                     RenderEngine::SkiaBackend::Graphite);
+                     RenderEngine::SkiaBackend::Graphite) &&
+            areBuffersPreallocated(context, display.physicalDisplay.getSize());
     auto& preallocatedTexturesRef = isProtected ? mProtectedTextures : mUnprotectedTextures;
 
     // Render into surfaces downscaled by 1x, 2x, 4x and 8x from the initial downscale.
@@ -313,8 +317,10 @@ bool KawaseBlurDualFilterV2::areBuffersPreallocated(const SkiaGpuContext* contex
     }
 
     const auto& preallocatedTextures = isProtected ? mProtectedTextures : mUnprotectedTextures;
-    if (preallocatedTextures[0] == nullptr) {
-        return false;
+    for (const auto& texture : preallocatedTextures) {
+        if (texture == nullptr) {
+            return false;
+        }
     }
 
     const ui::Size preallocatedDisplaySize =
@@ -364,6 +370,22 @@ void KawaseBlurDualFilterV2::preallocateBuffers(SkiaGpuContext* context, ui::Siz
     }
     ALOGD("(Re)allocated %zu bytes of %s memory for intermediate blur surfaces (%dx%d display)",
           totalBytes, isProtected ? "protected" : "unprotected", size.width, size.height);
+}
+
+bool KawaseBlurDualFilterV2::hasPreallocatedProtectedBuffers() const {
+    return std::any_of(std::begin(mProtectedTextures), std::end(mProtectedTextures),
+                       [](const auto& texture) { return texture != nullptr; });
+}
+
+void KawaseBlurDualFilterV2::releasePreallocatedBuffers() {
+    SFTRACE_CALL();
+    std::lock_guard<std::mutex> lock(mRenderingMutex);
+    for (auto& texture : mProtectedTextures) {
+        texture.reset();
+    }
+    mProtectedDisplaySize = ui::Size();
+    mTextureCleanupMgr.cleanup();
+    ALOGD("Released protected memory for intermediate blur surfaces");
 }
 
 } // namespace skia

@@ -71,6 +71,10 @@ public:
         return true;
     }
 
+    virtual bool hasPreallocatedProtectedBuffers() const { return false; }
+    // Must run on the RenderEngine thread while the protected context is current.
+    virtual void releasePreallocatedBuffers() {}
+
 private:
     // To avoid downscaling artifacts, we interpolate the blurred fbo with the full composited
     // image, up to this radius.

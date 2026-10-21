@@ -354,6 +354,22 @@ void RenderEngineThreaded::onActiveDisplaySizeChanged(ui::Size size) {
     mCondition.notify_one();
 }
 
+void RenderEngineThreaded::onDisplaysPoweredOff() {
+    waitUntilInitialized();
+    std::promise<void> resultPromise;
+    std::future<void> resultFuture = resultPromise.get_future();
+    {
+        std::lock_guard lock(mThreadMutex);
+        mFunctionCalls.push([&resultPromise](renderengine::RenderEngine& instance) {
+            SFTRACE_NAME("REThreaded::onDisplaysPoweredOff");
+            instance.onDisplaysPoweredOff();
+            resultPromise.set_value();
+        });
+    }
+    mCondition.notify_one();
+    resultFuture.get();
+}
+
 std::optional<pid_t> RenderEngineThreaded::getRenderEngineTid() const {
     std::promise<pid_t> tidPromise;
     std::future<pid_t> tidFuture = tidPromise.get_future();
