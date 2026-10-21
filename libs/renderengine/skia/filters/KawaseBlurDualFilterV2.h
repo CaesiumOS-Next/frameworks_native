@@ -60,6 +60,8 @@ public:
     // It can be enabled for the protected context on GaneshGL for memory savings, as protected
     // memory is extremely limited.
     void preallocateBuffers(SkiaGpuContext* context, ui::Size size) override;
+    bool hasPreallocatedProtectedBuffers() const override;
+    void releasePreallocatedBuffers() override;
 
 private:
     static constexpr uint64_t kUnprotectedUsageFlags =

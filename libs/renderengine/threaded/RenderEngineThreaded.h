@@ -63,6 +63,7 @@ public:
     int getContextPriority() override;
     bool supportsBackgroundBlur() override;
     void onActiveDisplaySizeChanged(ui::Size size) override;
+    void onDisplaysPoweredOff() override;
     std::optional<pid_t> getRenderEngineTid() const override;
     void setEnableTracing(bool tracingEnabled) override;
 

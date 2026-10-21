@@ -82,6 +82,7 @@ public:
         return mBlurFilter != nullptr;
     }
     void onActiveDisplaySizeChanged(ui::Size size) override final;
+    void onDisplaysPoweredOff() override final;
     int reportShadersCompiled();
 
     virtual void setEnableTracing(bool tracingEnabled) override final;
@@ -184,6 +185,9 @@ private:
 
     std::shared_ptr<AutoBackendTexture::LocalRef> getOrCreateBackendTexture(
             const sp<GraphicBuffer>& buffer, bool isOutputBuffer) REQUIRES(mRenderingMutex);
+    // Frees protected blur buffers while the protected context is current. Must be called on the
+    // RenderEngine thread with mRenderingMutex held.
+    void releasePreallocatedBlurBuffersLocked() REQUIRES(mRenderingMutex);
     void initCanvas(SkCanvas* canvas, const DisplaySettings& display);
     void drawShadow(SkCanvas* canvas, const SkRRect& casterRRect,
                     const ShadowSettings& shadowSettings);

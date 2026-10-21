@@ -594,6 +594,30 @@ bool SkiaRenderEngine::canSkipPostRenderCleanup() const {
     return mTextureCleanupMgr.isEmpty();
 }
 
+void SkiaRenderEngine::releasePreallocatedBlurBuffersLocked() {
+    SFTRACE_CALL();
+    // Protected surfaces must be freed while a protected context is current. Restore the
+    // previous context afterward so SurfaceFlinger's cached protected state remains accurate.
+    const bool wasProtected = mInProtectedContext;
+    useProtectedContext(true);
+    if (!mInProtectedContext) {
+        ALOGE("Unable to enter protected context to release preallocated blur buffers");
+        return;
+    }
+    mBlurFilter->releasePreallocatedBuffers();
+    useProtectedContext(wasProtected);
+}
+
+void SkiaRenderEngine::onDisplaysPoweredOff() {
+    std::lock_guard<std::mutex> lock(mRenderingMutex);
+    // Avoid switching contexts when there is nothing to release.
+    if (!mProtectedContext || !mBlurFilter || !mBlurFilter->hasPreallocatedProtectedBuffers()) {
+        return;
+    }
+    // No display is being composited, so nothing can be using the preallocated blur surfaces.
+    releasePreallocatedBlurBuffersLocked();
+}
+
 void SkiaRenderEngine::cleanupPostRender() {
     SFTRACE_CALL();
     std::lock_guard<std::mutex> lock(mRenderingMutex);
@@ -1775,13 +1799,16 @@ void SkiaRenderEngine::onActiveDisplaySizeChanged(ui::Size size) {
     // Start by resizing the current context's cache
     getActiveContext()->setResourceCacheLimit(skiaCacheLimit);
 
-    const bool shouldPreallocateBlurBuffers =
+    const bool preallocateBlurBuffers =
             FlagManager::getInstance().window_blur_kawase2_preallocate_buffers() &&
-            mBlurFilter != nullptr &&
-            !mBlurFilter->areBuffersPreallocated(getActiveContext(), size);
-    if (shouldPreallocateBlurBuffers) {
-        mBlurFilter->preallocateBuffers(getActiveContext(), size);
-    }
+            mBlurFilter != nullptr;
+    const auto maybePreallocateBlurBuffers = [&] {
+        if (preallocateBlurBuffers &&
+            !mBlurFilter->areBuffersPreallocated(getActiveContext(), size)) {
+            mBlurFilter->preallocateBuffers(getActiveContext(), size);
+        }
+    };
+    maybePreallocateBlurBuffers();
 
     // If it is possible to switch contexts then we will repeat the same operations there
     const bool originalProtectedState = mInProtectedContext;
@@ -1789,9 +1816,9 @@ void SkiaRenderEngine::onActiveDisplaySizeChanged(ui::Size size) {
     if (mInProtectedContext != originalProtectedState) {
         getActiveContext()->setResourceCacheLimit(skiaCacheLimit);
 
-        if (shouldPreallocateBlurBuffers) {
-            mBlurFilter->preallocateBuffers(getActiveContext(), size);
-        }
+        // Recheck the newly active context independently. The unprotected Ganesh context may
+        // intentionally report its buffers as preallocated even when protected buffers were freed.
+        maybePreallocateBlurBuffers();
 
         // Reset back to the initial context that was active when this method was called
         useProtectedContext(originalProtectedState);

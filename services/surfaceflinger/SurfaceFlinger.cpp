@@ -6409,9 +6409,25 @@ SurfaceFlinger::setPhysicalDisplayPowerModeAsync(const sp<DisplayDevice>& displa
 
     applyOptimizationPolicy(__func__);
 
+    const bool manageBlurBuffers =
+            FlagManager::getInstance().window_blur_kawase2_preallocate_buffers();
     if (mScheduler->setDisplayPowerMode(displayId, mode)) {
         MODE_TRANSITION_LOCK();
         onNewPacesetterDisplay();
+    } else if (manageBlurBuffers && !couldRefresh && canRefresh) {
+        // Reallocate protected blur buffers even if the display resumes at the same size and
+        // remains the pacesetter. They may have been released while all displays were off.
+        ui::Size largestFramebufferSize;
+        {
+            Mutex::Autolock lock(mStateLock);
+            largestFramebufferSize = findLargestFramebufferSizeLocked();
+        }
+        getRenderEngine().onActiveDisplaySizeChanged(largestFramebufferSize);
+    }
+
+    // Must run after the pacesetter update above, which may reallocate the blur buffers.
+    if (manageBlurBuffers && couldRefresh && !canRefresh) {
+        releaseBlurBuffersIfNoDisplayRefreshable();
     }
 
     const auto activeMode = display->refreshRateSelector().getActiveMode().modePtr;
@@ -6534,9 +6550,15 @@ void SurfaceFlinger::setVirtualDisplayPowerMode(const sp<DisplayDevice>& display
     ALOGD("Setting power mode %d on virtual display %s %s", mode, to_string(displayId).c_str(),
           display->getDisplayName().c_str());
     mPowerModeChangeInProgress = true;
+    const bool couldRefresh = display->isRefreshable();
     display->setPowerMode(static_cast<hal::PowerMode>(mode));
 
     applyOptimizationPolicy(__func__);
+
+    if (FlagManager::getInstance().window_blur_kawase2_preallocate_buffers() && couldRefresh &&
+        !display->isRefreshable()) {
+        releaseBlurBuffersIfNoDisplayRefreshable();
+    }
 
     ALOGD("Finished setting power mode %d on virtual display %s", mode,
           to_string(displayId).c_str());
@@ -6586,6 +6608,17 @@ void SurfaceFlinger::applyOptimizationPolicy(const char* whence) FTL_FAKE_GUARD(
                             OptimizationPolicy::optimizeForPerformance;
                 });
         mScheduler->enableSyntheticVsync(!disableSyntheticVsync);
+    }
+}
+
+void SurfaceFlinger::releaseBlurBuffersIfNoDisplayRefreshable() {
+    const auto& displays = FTL_FAKE_GUARD(mStateLock, mDisplays);
+    const bool anyDisplayRefreshable =
+            std::any_of(displays.begin(), displays.end(),
+                        [](const auto& pair) { return pair.second->isRefreshable(); });
+    if (!anyDisplayRefreshable) {
+        // Protected blur buffers can otherwise prevent the secure heap from freezing on suspend.
+        getRenderEngine().onDisplaysPoweredOff();
     }
 }
 
