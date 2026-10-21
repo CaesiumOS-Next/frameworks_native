@@ -767,6 +767,11 @@ private:
     // be optimized for performance.
     void applyOptimizationPolicy(const char* whence) REQUIRES(kMainThreadContext);
 
+    // Releases RenderEngine's preallocated protected blur buffers if no physical display is
+    // refreshable. Blocks until the buffers are freed, so must not be called with mStateLock held.
+    void releaseBlurBuffersIfPhysicalDisplaysOff() EXCLUDES(mStateLock)
+            REQUIRES(kMainThreadContext);
+
     // Returns the preferred mode for PhysicalDisplayId if the Scheduler has selected one for that
     // display. Falls back to the display's defaultModeId otherwise.
     ftl::Optional<scheduler::FrameRateMode> getPreferredDisplayMode(
