@@ -26,6 +26,7 @@
 #include <cutils/compiler.h>
 #include <utils/Log.h>
 
+#include <functional>
 #include <stdio.h>
 
 #include "BuildFlags.h"
@@ -150,6 +151,19 @@ void BpBinder::ObjectManager::kill()
 
 // ---------------------------------------------------------------------------
 
+#ifdef BINDER_WITH_KERNEL_IPC
+namespace {
+thread_local std::function<void()>* gPostLimitCallbackTask = nullptr;
+} // namespace
+
+__attribute__((visibility("hidden"))) std::function<void()>* setBpBinderPostTask(
+        std::function<void()>* postTask) noexcept {
+    std::function<void()>* prev = gPostLimitCallbackTask;
+    gPostLimitCallbackTask = postTask;
+    return prev;
+}
+#endif
+
 sp<BpBinder> BpBinder::create(int32_t handle) {
     if constexpr (!kEnableKernelIpc) {
         LOG_ALWAYS_FATAL("Binder kernel driver disabled at build time");
@@ -160,6 +174,18 @@ sp<BpBinder> BpBinder::create(int32_t handle) {
     if (sCountByUidEnabled) {
         trackedUid = IPCThreadState::self()->getCallingUid();
         AutoMutex _l(sTrackingLock);
+        const auto dispatchLimitCallback = [trackedUid]() {
+            if (!sLimitCallback) return;
+#ifdef BINDER_WITH_KERNEL_IPC
+            if (gPostLimitCallbackTask != nullptr) {
+                *gPostLimitCallbackTask = [trackedUid, callback = sLimitCallback]() {
+                    callback(trackedUid);
+                };
+                return;
+            }
+#endif
+            sLimitCallback(trackedUid);
+        };
         uint32_t trackedValue = sTrackingMap[trackedUid];
         if (CC_UNLIKELY(trackedValue & LIMIT_REACHED_MASK)) {
             if (sBinderProxyThrottleCreate) {
@@ -173,7 +199,7 @@ sp<BpBinder> BpBinder::create(int32_t handle) {
                 ALOGE("Still too many binder proxy objects sent to uid %d from uid %d (%d proxies "
                       "held)",
                       getuid(), trackedUid, trackedValue);
-                if (sLimitCallback) sLimitCallback(trackedUid);
+                dispatchLimitCallback();
                 sLastLimitCallbackMap[trackedUid] = trackedValue;
             }
         } else {
@@ -181,7 +207,7 @@ sp<BpBinder> BpBinder::create(int32_t handle) {
                 ALOGE("Too many binder proxy objects sent to uid %d from uid %d (%d proxies held)",
                       getuid(), trackedUid, trackedValue);
                 sTrackingMap[trackedUid] |= LIMIT_REACHED_MASK;
-                if (sLimitCallback) sLimitCallback(trackedUid);
+                dispatchLimitCallback();
                 sLastLimitCallbackMap[trackedUid] = trackedValue & COUNTING_VALUE_MASK;
                 if (sBinderProxyThrottleCreate) {
                     ALOGI("Throttling binder proxy creates from uid %d in uid %d until binder proxy"
