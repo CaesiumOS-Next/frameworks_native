@@ -35,6 +35,7 @@
 #include "binder_module.h"
 
 #include <errno.h>
+#include <functional>
 #include <fcntl.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -311,11 +312,15 @@ ProcessState::handle_entry* ProcessState::lookupHandleLocked(int32_t handle)
 
 // see b/166779391: cannot change the VNDK interface, so access like this
 extern sp<BBinder> the_context_object;
+__attribute__((visibility("hidden"))) std::function<void()>* setBpBinderPostTask(
+        std::function<void()>* postTask) noexcept;
 
 sp<IBinder> ProcessState::getStrongProxyForHandle(int32_t handle)
 {
     sp<IBinder> result;
+    std::function<void()> postTask;
 
+    {
     AutoMutex _l(mLock);
 
     if (handle == 0 && the_context_object != nullptr) return the_context_object;
@@ -362,6 +367,9 @@ sp<IBinder> ProcessState::getStrongProxyForHandle(int32_t handle)
                    return nullptr;
             }
 
+            std::function<void()>* prevPostTask = setBpBinderPostTask(&postTask);
+            auto restorePostTask = android::base::make_scope_guard(
+                    [prevPostTask]() noexcept { setBpBinderPostTask(prevPostTask); });
             sp<BpBinder> b = BpBinder::PrivateAccessor::create(handle);
             e->binder = b.get();
             if (b) e->refs = b->getWeakRefs();
@@ -374,6 +382,9 @@ sp<IBinder> ProcessState::getStrongProxyForHandle(int32_t handle)
             e->refs->decWeak(this);
         }
     }
+    } // unlock mLock before running postTask
+
+    if (postTask) postTask();
 
     return result;
 }

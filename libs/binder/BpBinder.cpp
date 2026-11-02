@@ -26,6 +26,7 @@
 #include <cutils/compiler.h>
 #include <utils/Log.h>
 
+#include <functional>
 #include <stdio.h>
 
 #include "BuildFlags.h"
@@ -150,6 +151,19 @@ void BpBinder::ObjectManager::kill()
 
 // ---------------------------------------------------------------------------
 
+#ifdef BINDER_WITH_KERNEL_IPC
+namespace {
+thread_local std::function<void()>* gPostLimitCallbackTask = nullptr;
+} // namespace
+
+__attribute__((visibility("hidden"))) std::function<void()>* setBpBinderPostTask(
+        std::function<void()>* postTask) noexcept {
+    std::function<void()>* prev = gPostLimitCallbackTask;
+    gPostLimitCallbackTask = postTask;
+    return prev;
+}
+#endif
+
 sp<BpBinder> BpBinder::create(int32_t handle) {
     if constexpr (!kEnableKernelIpc) {
         LOG_ALWAYS_FATAL("Binder kernel driver disabled at build time");
@@ -173,7 +187,19 @@ sp<BpBinder> BpBinder::create(int32_t handle) {
                 ALOGE("Still too many binder proxy objects sent to uid %d from uid %d (%d proxies "
                       "held)",
                       getuid(), trackedUid, trackedValue);
+#ifdef BINDER_WITH_KERNEL_IPC
+            if (sLimitCallback) {
+                if (gPostLimitCallbackTask != nullptr) {
+                    *gPostLimitCallbackTask = [trackedUid, callback = sLimitCallback]() {
+                        callback(trackedUid);
+                    };
+                } else {
+                    sLimitCallback(trackedUid);
+                }
+            }
+#else
                 if (sLimitCallback) sLimitCallback(trackedUid);
+#endif
                 sLastLimitCallbackMap[trackedUid] = trackedValue;
             }
         } else {
@@ -181,7 +207,19 @@ sp<BpBinder> BpBinder::create(int32_t handle) {
                 ALOGE("Too many binder proxy objects sent to uid %d from uid %d (%d proxies held)",
                       getuid(), trackedUid, trackedValue);
                 sTrackingMap[trackedUid] |= LIMIT_REACHED_MASK;
+#ifdef BINDER_WITH_KERNEL_IPC
+            if (sLimitCallback) {
+                if (gPostLimitCallbackTask != nullptr) {
+                    *gPostLimitCallbackTask = [trackedUid, callback = sLimitCallback]() {
+                        callback(trackedUid);
+                    };
+                } else {
+                    sLimitCallback(trackedUid);
+                }
+            }
+#else
                 if (sLimitCallback) sLimitCallback(trackedUid);
+#endif
                 sLastLimitCallbackMap[trackedUid] = trackedValue & COUNTING_VALUE_MASK;
                 if (sBinderProxyThrottleCreate) {
                     ALOGI("Throttling binder proxy creates from uid %d in uid %d until binder proxy"
