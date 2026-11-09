@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "981438cf_ccd76a2b",
+        "filename": "libs/binder/BpBinder.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1976460
+      },
+      "writtenOn": "2026-11-09T09:08:13Z",
+      "side": 1,
+      "message": "Please fix this WARNING reported by autoreview issue finding: Consider factoring out this logic into a helper function or lambda to avoid duplication with the block at line 211.",
+      "range": {
+        "startLine": 191,
+        "startChar": 0,
+        "endLine": 191,
+        "endChar": 0
+      },
+      "revId": "4813ecd031242c63d289ddd7edb880f898b52f2c",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2897ba27_6f8af563",
+        "filename": "libs/binder/ProcessState.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1976460
+      },
+      "writtenOn": "2026-11-09T09:08:13Z",
+      "side": 1,
+      "message": "Please fix this WARNING reported by autoreview issue finding: The declaration and call to `setBpBinderPostTask` should be wrapped in `#ifdef BINDER_WITH_KERNEL_IPC`. Currently, this will cause a linker error on builds where `BINDER_WITH_KERNEL_IPC` is not defined, as the implementation in `BpBinder.cpp` is conditional.",
+      "range": {
+        "startLine": 315,
+        "startChar": 0,
+        "endLine": 315,
+        "endChar": 0
+      },
+      "revId": "4813ecd031242c63d289ddd7edb880f898b52f2c",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    }
+  ]
+}
