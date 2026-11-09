@@ -26,6 +26,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "cb64a355_418cd108",
+        "filename": "libs/binder/BpBinder.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 2063047
+      },
+      "writtenOn": "2026-11-09T17:53:04Z",
+      "side": 1,
+      "message": "Refactored the duplicated callback-dispatch logic into a local dispatchLimitCallback lambda and invoked it from both limit-handling blocks. This preserves the existing deferred and immediate callback behavior while removing the duplication.\n\n\nUpdated BpBinder.cpp to extract the duplicated logic into a shared dispatchLimitCallback lambda, called from both limit-handling blocks.\n\nPreserved deferred and immediate callback behavior.\n\nValidation: whitespace check passed; compiled and tested the extracted lambda with kernel IPC enabled and disabled. Full Android build was unavailable.",
+      "parentUuid": "981438cf_ccd76a2b",
+      "range": {
+        "startLine": 191,
+        "startChar": 0,
+        "endLine": 191,
+        "endChar": 0
+      },
+      "revId": "4813ecd031242c63d289ddd7edb880f898b52f2c",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "2897ba27_6f8af563",
         "filename": "libs/binder/ProcessState.cpp",
         "patchSetId": 2
@@ -37,6 +61,30 @@
       "writtenOn": "2026-11-09T09:08:13Z",
       "side": 1,
       "message": "Please fix this WARNING reported by autoreview issue finding: The declaration and call to `setBpBinderPostTask` should be wrapped in `#ifdef BINDER_WITH_KERNEL_IPC`. Currently, this will cause a linker error on builds where `BINDER_WITH_KERNEL_IPC` is not defined, as the implementation in `BpBinder.cpp` is conditional.",
+      "range": {
+        "startLine": 315,
+        "startChar": 0,
+        "endLine": 315,
+        "endChar": 0
+      },
+      "revId": "4813ecd031242c63d289ddd7edb880f898b52f2c",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "85c9cae9_a1764c19",
+        "filename": "libs/binder/ProcessState.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 2063047
+      },
+      "writtenOn": "2026-11-09T17:53:04Z",
+      "side": 1,
+      "message": "Wrapped the declaration and both calls to setBpBinderPostTask in #ifdef BINDER_WITH_KERNEL_IPC, matching its conditional implementation. Also guarded the associated deferred-callback variable and invocation. This removes references to the helper in non-kernel builds, preventing the reported linker error.\n\n\n\nAdded #ifdef BINDER_WITH_KERNEL_IPC guards around:\n\nThe helper declaration and both calls.\nThe deferred callback variable and execution.\nVerified preprocessing with kernel IPC enabled and disabled: non-kernel builds retain no helper references, while proxy creation remains unchanged. Whitespace checks passed. Full Android build/link validation was unavailable.",
+      "parentUuid": "2897ba27_6f8af563",
       "range": {
         "startLine": 315,
         "startChar": 0,
