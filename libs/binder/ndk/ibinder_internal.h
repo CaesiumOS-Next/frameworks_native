@@ -113,11 +113,25 @@ struct ABpBinder : public AIBinder {
     void addDeathRecipient(const ::android::sp<AIBinder_DeathRecipient>& recipient,
                            void* cookie) override;
 
+    // Descriptor verification for proxies is deferred from associateClass() to the first
+    // transaction that fails with STATUS_BAD_TYPE (the remote side rejected our interface
+    // token). This avoids one synchronous INTERFACE_TRANSACTION per proxy object.
+    bool needsDescriptorVerification() const {
+        return mDescriptorVerificationPending.load(std::memory_order_relaxed);
+    }
+    void setDescriptorVerificationPending(bool pending) {
+        mDescriptorVerificationPending.store(pending, std::memory_order_relaxed);
+    }
+    // Fetches the remote descriptor (cached by BpBinder afterwards) and logs a mismatch against
+    // the associated class. Returns true if the descriptors match or no class is associated.
+    bool verifyDescriptor();
+
    private:
     friend android::sp<ABpBinder>;
     explicit ABpBinder(const ::android::sp<::android::IBinder>& binder);
     ::android::sp<::android::IBinder> mRemote;
     bool mServiceFuzzing = false;
+    std::atomic<bool> mDescriptorVerificationPending{false};
     struct DeathRecipientInfo {
         android::wp<AIBinder_DeathRecipient> recipient;
         void* cookie;

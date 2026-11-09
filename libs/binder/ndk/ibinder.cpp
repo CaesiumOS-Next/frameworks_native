@@ -157,17 +157,12 @@ const std::string getTraceSectionName(const AIBinder_Class* clazz, transaction_c
 bool AIBinder::associateClass(const AIBinder_Class* clazz) {
     if (clazz == nullptr) return false;
 
-    // If mClazz is non-null, this must have been called and cached
-    // already. So, we can safely call this first. Due to the implementation
-    // of getInterfaceDescriptor (at time of writing), two simultaneous calls
-    // may lead to extra binder transactions, but this is expected to be
-    // exceedingly rare. Once we have a binder, when we get it again later,
-    // we won't make another binder transaction here.
-    const String16& descriptor = getBinder()->getInterfaceDescriptor();
     const String16& newDescriptor = clazz->getInterfaceDescriptor();
 
     std::lock_guard<std::mutex> lock(mClazzMutex);
     if (mClazz == clazz) return true;
+
+    ABpBinder* proxy = asABpBinder();
 
     // If this is an ABpBinder, the first class object becomes the canonical one. The implication
     // of this is that no API can require a proxy information to get information on how to behave.
@@ -184,7 +179,7 @@ bool AIBinder::associateClass(const AIBinder_Class* clazz) {
     // binder Stability checks exactly like any other in-process call. The stability is known
     // to the IBinder object, so that it doesn't matter if a class object comes from
     // a different stability level.
-    if (mClazz != nullptr && !asABpBinder()) {
+    if (mClazz != nullptr && proxy == nullptr) {
         const String16& currentDescriptor = mClazz->getInterfaceDescriptor();
         if (newDescriptor == currentDescriptor) {
             ALOGE("Class descriptors '%s' match during associateClass, but they are different class"
@@ -200,19 +195,62 @@ bool AIBinder::associateClass(const AIBinder_Class* clazz) {
         return false;
     }
 
+    if (proxy != nullptr && !proxy->isServiceFuzzing()) {
+        // Remote object. Do not issue the INTERFACE_TRANSACTION that
+        // IBinder::getInterfaceDescriptor() performs for every new proxy object: the remote
+        // side enforces the interface token on every user transaction anyway
+        // (ABBinder::onTransact / BBinder::checkInterface), so associating the wrong class cannot
+        // go unnoticed - it fails the first transaction with STATUS_BAD_TYPE, at which point
+        // AIBinder_transact() fetches the descriptor and logs the same diagnostic the eager check
+        // used to produce (see ABpBinder::verifyDescriptor).
+        //
+        // The eager check doubled the cost of every IPC that hands out a short-lived binder,
+        // e.g. ISystemSuspend::acquireWakeLock() returning a fresh IWakeLock per call: on Wear
+        // devices INTERFACE_TRANSACTION was 4% of all binder requests.
+        if (mClazz != nullptr) {
+            // Re-association with a different class object naming the same interface (e.g. the
+            // same AIDL class loaded in two linkernamespaces) is fine and needs no IPC.
+            if (newDescriptor == mClazz->getInterfaceDescriptor()) return true;
+
+            // Different interface: fall back to the authoritative remote descriptor.
+            const String16& descriptor = getBinder()->getInterfaceDescriptor();
+            if (descriptor != newDescriptor) {
+                ALOGE("%s: Expecting binder to have class '%s' but descriptor is actually '%s'.",
+                      __func__, String8(newDescriptor).c_str(),
+                      SanitizeString(descriptor).c_str());
+                return false;
+            }
+            return true;
+        }
+
+        if (!getBinder()->isBinderAlive()) {
+            // b/155793159: keep failing fast for a binder that is already known to be dead; the
+            // descriptor, if any, is cached by BpBinder so this does not transact.
+            const String16& descriptor = getBinder()->getInterfaceDescriptor();
+            if (descriptor != newDescriptor) {
+                ALOGE("%s: Cannot associate class '%s' to dead binder with cached descriptor '%s'.",
+                      __func__, String8(newDescriptor).c_str(),
+                      SanitizeString(descriptor).c_str());
+                return false;
+            }
+        }
+
+        mClazz = clazz;
+        proxy->setDescriptorVerificationPending(true);
+        return true;
+    }
+
+    // Local object (or a proxy under service fuzzing): the descriptor is available without IPC
+    // (ABBinder::getInterfaceDescriptor returns the class's descriptor).
+    const String16& descriptor = getBinder()->getInterfaceDescriptor();
+
     // This will always be an O(n) comparison, but it's expected to be extremely rare.
     // since it's an error condition. Do the comparison after we take the lock and
     // check the pointer equality fast path. By always taking the lock, it's also
     // more flake-proof. However, the check is not dependent on the lock.
-    if (descriptor != newDescriptor && !(asABpBinder() && asABpBinder()->isServiceFuzzing())) {
-        if (getBinder()->isBinderAlive()) {
-            ALOGE("%s: Expecting binder to have class '%s' but descriptor is actually '%s'.",
-                  __func__, String8(newDescriptor).c_str(), SanitizeString(descriptor).c_str());
-        } else {
-            // b/155793159
-            ALOGE("%s: Cannot associate class '%s' to dead binder with cached descriptor '%s'.",
-                  __func__, String8(newDescriptor).c_str(), SanitizeString(descriptor).c_str());
-        }
+    if (descriptor != newDescriptor && !(proxy != nullptr && proxy->isServiceFuzzing())) {
+        ALOGE("%s: Expecting binder to have class '%s' but descriptor is actually '%s'.", __func__,
+              String8(newDescriptor).c_str(), SanitizeString(descriptor).c_str());
         return false;
     }
 
@@ -224,6 +262,26 @@ bool AIBinder::associateClass(const AIBinder_Class* clazz) {
     }
 
     return true;
+}
+
+bool ABpBinder::verifyDescriptor() {
+    const AIBinder_Class* clazz = getClass();
+    setDescriptorVerificationPending(false);
+    if (clazz == nullptr) return true;
+
+    // One INTERFACE_TRANSACTION, cached by BpBinder afterwards.
+    const String16& descriptor = mRemote->getInterfaceDescriptor();
+    const String16& expected = clazz->getInterfaceDescriptor();
+    if (descriptor == expected) return true;
+
+    if (mRemote->isBinderAlive()) {
+        ALOGE("%s: Expecting binder to have class '%s' but descriptor is actually '%s'.", __func__,
+              String8(expected).c_str(), SanitizeString(descriptor).c_str());
+    } else {
+        ALOGE("%s: Binder associated with class '%s' is dead (cached descriptor '%s').", __func__,
+              String8(expected).c_str(), SanitizeString(descriptor).c_str());
+    }
+    return false;
 }
 
 ABBinder::ABBinder(const AIBinder_Class* clazz, void* userData)
@@ -903,6 +961,16 @@ binder_status_t AIBinder_transact(AIBinder* binder, transaction_code_t code, APa
 
     status_t status = binder->getBinder()->transact(code, *(*in)->get(), (*out)->get(), flags);
     binder_status_t ret = PruneStatusT(status);
+
+    if (ret == STATUS_BAD_TYPE) {
+        // The remote side rejected our interface token. Descriptor verification is deferred for
+        // proxies (see AIBinder::associateClass); do it now so a wrong class association is
+        // reported with the same diagnostic the eager check used to produce.
+        if (ABpBinder* proxy = binder->asABpBinder();
+            proxy != nullptr && proxy->needsDescriptorVerification()) {
+            proxy->verifyDescriptor();
+        }
+    }
 
     if (ret != STATUS_OK) {
         delete *out;
