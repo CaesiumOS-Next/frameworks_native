@@ -3,3 +3,6 @@ service automotive_display /system/bin/android.frameworks.automotive.display@1.0
     user graphics
     group automotive_evs
     disabled
+
+on late-init
+    start automotive_display
