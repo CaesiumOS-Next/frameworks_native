@@ -452,6 +452,9 @@ uint32_t OutputLayer::calculateOutputRelativeBufferTransform(
     ui::Transform transform(displayTransform * layerTransform * bufferTransform);
 
     if (layerState.geomBufferUsesDisplayInverseTransform) {
+        if (!layerTransform.preserveRects()) {
+            return ui::Transform::ROT_INVALID;
+        }
         /*
          * We must apply the internal display's inverse transform to the buffer
          * transform, and not the one for the output this layer is on.
